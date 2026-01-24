@@ -1,14 +1,14 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import { apiClient } from "@/app/services/api-client.service";
-import { useRawInitData } from "@telegram-apps/sdk-react";
+import { init, useRawInitData } from "@telegram-apps/sdk-react";
 
 interface TelegramUser {
   id: number;
@@ -71,6 +71,7 @@ function parseInitData(initDataRaw: string): Record<string, any> | null {
 
 export function TelegramProvider({ children }: { children: any }) {
   const sdkRawInitData = useRawInitData();
+  const hasInitializedRef = useRef(false);
   const [webApp, setWebApp] = useState<any | null>(null);
   const [user, setUser] = useState<TelegramUser | null>(null);
   const [initDataRaw, setInitDataRaw] = useState<string | null>(null);
@@ -82,15 +83,19 @@ export function TelegramProvider({ children }: { children: any }) {
   useEffect(() => {
     const initialize = async () => {
       try {
+        const telegramWebApp =
+          typeof window !== "undefined" ? (window as any).Telegram?.WebApp : null;
+
+        if (telegramWebApp && !hasInitializedRef.current) {
+          init();
+          hasInitializedRef.current = true;
+        }
+
         // Prefer WebApp initData when available, fallback to SDK hook.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const resolvedInitData =
-          (typeof window !== "undefined" &&
-            (window as any).Telegram?.WebApp?.initData) ||
-          sdkRawInitData;
+        const resolvedInitData = telegramWebApp?.initData || sdkRawInitData;
 
         if (!resolvedInitData) {
-          if (typeof window !== "undefined" && !(window as any).Telegram?.WebApp) {
+          if (!telegramWebApp) {
             setError("Not running in Telegram Web App environment");
             setIsReady(false);
           }
@@ -100,14 +105,14 @@ export function TelegramProvider({ children }: { children: any }) {
         apiClient.setInitDataRaw(resolvedInitData);
         setInitDataRaw(resolvedInitData);
         setInitData(parseInitData(resolvedInitData));
-        setWebApp((window as any).Telegram?.WebApp || null);
+        setWebApp(telegramWebApp || null);
 
         const authResponse = await apiClient.validateAuth(resolvedInitData);
         if (authResponse.valid && authResponse.user) {
           setUser(authResponse.user);
         }
 
-        (window as any).Telegram?.WebApp?.ready();
+        telegramWebApp?.ready();
         setIsReady(true);
         setError(null);
 
