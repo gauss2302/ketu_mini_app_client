@@ -6,6 +6,8 @@ import { ArrowLeft, MapPin, Clock, Star, Heart } from "lucide-react";
 import { savedPlaces } from "@/data/mock-places";
 import { RestaurantMenu } from "./menu/restaurant-menu";
 
+const numberFormatter = new Intl.NumberFormat("en-US");
+
 interface PlaceDetailsProps {
   placeId: string;
 }
@@ -61,7 +63,7 @@ export const PlaceDetails = ({ placeId }: PlaceDetailsProps) => {
                 <Star className="w-4 h-4 text-yellow-400 fill-current" />
                 <span className="ml-1 font-medium">{place.rating}</span>
                 <span className="opacity-90 ml-1">
-                  ({place.reviewCount.toLocaleString()} reviews)
+                  ({numberFormatter.format(place.reviewCount)} reviews)
                 </span>
               </div>
               <div className="mx-2 opacity-60">•</div>

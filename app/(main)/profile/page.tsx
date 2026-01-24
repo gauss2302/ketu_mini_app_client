@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import { useEffect, useState } from "react";
 import {
   Settings,
   ChevronRight,
@@ -12,18 +12,61 @@ import {
   Bell,
   LogOut,
 } from "lucide-react";
-import { useTelegram } from "@/app/components/providers/telegram-provider";
-import { useRouter } from "next/navigation";
 
-const ProfilePage = () => {
-  const { user } = useTelegram();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const SettingsIcon = Settings as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ChevronRightIcon = ChevronRight as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const MapPinIcon = MapPin as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const StarIcon = Star as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const HeartIcon = Heart as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const GiftIcon = Gift as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const HelpCircleIcon = HelpCircle as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const BellIcon = Bell as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const LogOutIcon = LogOut as any;
+import { useRouter } from "next/navigation";
+import { apiClient, BackendUser } from "@/app/services/api-client.service";
+import { useTelegram } from "@/app/components/providers/telegram-provider";
+
+export const ProfilePage = () => {
+  const { isReady } = useTelegram();
+  const [profile, setProfile] = useState<BackendUser | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const router = useRouter();
 
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!isReady) return;
+      setIsLoading(true);
+      setErrorMessage(null);
+      try {
+        const data = await apiClient.getUserProfile();
+        setProfile(data);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to load profile";
+        console.error("Profile load failed", error);
+        setErrorMessage(message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, [isReady]);
+
   const menuItems = [
-    { icon: Gift, label: "My Bookings", badge: "2 Active" },
-    { icon: Heart, label: "Saved Places", badge: "12 Places" },
-    { icon: Bell, label: "Notifications", badge: "3 New" },
-    { icon: HelpCircle, label: "Help Center" },
+    { icon: GiftIcon, label: "My Bookings", badge: "2 Active" },
+    { icon: HeartIcon, label: "Saved Places", badge: "12 Places" },
+    { icon: BellIcon, label: "Notifications", badge: "3 New" },
+    { icon: HelpCircleIcon, label: "Help Center" },
   ];
 
   return (
@@ -36,22 +79,28 @@ const ProfilePage = () => {
             onClick={() => router.push("/settings")}
             className="p-2 hover:bg-gray-100 rounded-full"
           >
-            <Settings className="w-6 h-6 text-gray-600" />
+            <SettingsIcon className="w-6 h-6 text-gray-600" />
           </button>
         </div>
 
         <div className="flex items-center space-x-4">
-          <div className="w-16 h-16 bg-[#FF7352] rounded-full flex items-center justify-center text-white text-2xl font-semibold">
-            {user?.first_name?.[0] || "U"}
+          <div
+              className="w-16 h-16 bg-[#FF7352] rounded-full flex items-center justify-center text-white text-2xl font-semibold">
+            {profile?.first_name?.[0] || "U"}
           </div>
+
+
           <div>
             <h2 className="font-semibold text-lg">
-              {user?.first_name
-                ? `${user.first_name} ${user.last_name || ""}`
-                : "User"}
+              {profile?.first_name
+                  ? `${profile.first_name} ${profile.last_name || ""}`
+                  : "User"}
             </h2>
+            <div className={"flex items-center space-x-4"}>
+              {profile?.id}
+            </div>
             <div className="flex items-center text-gray-500 text-sm mt-1">
-              <MapPin className="w-4 h-4 mr-1" />
+              <MapPinIcon className="w-4 h-4 mr-1"/>
               Tashkent, Uzbekistan
             </div>
           </div>
@@ -60,6 +109,12 @@ const ProfilePage = () => {
 
       {/* Stats */}
       <div className="bg-white mt-2 px-4 py-4">
+        {isLoading && (
+          <div className="text-sm text-gray-500">Loading profile...</div>
+        )}
+        {errorMessage && (
+          <div className="text-sm text-red-500">{errorMessage}</div>
+        )}
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
             <div className="text-2xl font-semibold text-[#FF7352]">12</div>
@@ -81,16 +136,33 @@ const ProfilePage = () => {
         <div className="flex justify-between items-start mb-8">
           <div>
             <div className="text-sm opacity-90 mb-1">Membership</div>
-            <div className="font-semibold">Premium Member</div>
+            <div className="font-semibold">Premium Member: {profile?.is_premium ? "PREM" : "NO"}</div>
+            <div className={"flex flex-col items-left"}>
+              <p>
+                {profile?.first_name}
+              </p>
+              <p>
+                {profile?.username}
+              </p>
+              <p>
+                Lanugage: {profile?.language_code}
+              </p>
+              {/*<Image*/}
+              {/*src={initDataForTest.picture_url!.toString()}*/}
+              {/*width={30}*/}
+              {/*height={30}*/}
+              {/*alt={initDataForTest!.picture_url?.toString()}*/}
+              {/*/>*/}
+            </div>
           </div>
-          <Star className="w-6 h-6 fill-current" />
+          <StarIcon className="w-6 h-6 fill-current"/>
         </div>
         <div className="flex justify-between items-end">
           <div>
             <div className="text-sm opacity-90 mb-1">Valid Until</div>
             <div className="font-semibold">Dec 2024</div>
           </div>
-          <div className="text-sm opacity-90">ID: {user?.id || "12345"}</div>
+          <div className="text-sm opacity-90">ID: {profile?.id || "12345"}</div>
         </div>
       </div>
 
@@ -111,7 +183,7 @@ const ProfilePage = () => {
               {item.badge && (
                 <span className="text-sm text-gray-500">{item.badge}</span>
               )}
-              <ChevronRight className="w-5 h-5 text-gray-400" />
+              <ChevronRightIcon className="w-5 h-5 text-gray-400" />
             </div>
           </button>
         ))}
@@ -120,7 +192,7 @@ const ProfilePage = () => {
       {/* Logout Button */}
       <div className="px-4 mt-4">
         <button className="w-full flex items-center justify-center space-x-2 px-4 py-3 text-red-500 bg-red-50 rounded-xl">
-          <LogOut className="w-5 h-5" />
+          <LogOutIcon className="w-5 h-5" />
           <span className="font-medium">Log Out</span>
         </button>
       </div>

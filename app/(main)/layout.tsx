@@ -1,4 +1,5 @@
 import { BottomNav } from "../components/bottom-nav";
+import React from "react";
 
 export default function MainLayout({
   children,
@@ -8,8 +9,6 @@ export default function MainLayout({
   return (
     <div className="min-h-screen bg-white">
       <div className="pb-20">
-        {" "}
-        {/* Added padding for bottom nav */}
         {children}
       </div>
       <BottomNav />

@@ -10,7 +10,10 @@
   },
   "dependencies": {
     "@next/swc-darwin-arm64": "^15.2.1",
+    "@telegram-apps/init-data-node": "^2.0.10",
+    "@telegram-apps/sdk-react": "^3.3.6",
     "@twa-dev/sdk": "^8.0.1",
+    "jose": "^6.1.2",
     "lucide-react": "^0.471.0",
     "next": "15.1.4",
     "react": "^19.0.0",

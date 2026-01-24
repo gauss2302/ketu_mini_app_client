@@ -1,17 +1,34 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Search, MapPin, Heart, Star, Menu, ArrowRight } from "lucide-react";
-
 import Link from "next/link";
 import { savedPlaces } from "@/data/mock-places";
-import { useTelegram } from "../components/providers/telegram-provider";
+import { useTelegram } from "@/app/hooks/use-telegram-webapp";
+
+import { telegramSDK, TelegramSDKService } from "@/app/services/telegram-sdk.service";
+import { User } from "@telegram-apps/sdk-react";
+import { apiClient } from "../services/api-client.service";
+
+const numberFormatter = new Intl.NumberFormat("en-US");
 
 export default function Home() {
-  const { webApp } = useTelegram();
+  const { isReady } = useTelegram();
+
+  const [user, setUser] = useState<User | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [error, setError] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
+
   const [selectedCategory, setSelectedCategory] = React.useState("all");
 
-  const categories = [
+  interface Categories {
+    id: string;
+    name: string;
+  }
+
+  const categories: Categories[] = [
     { id: "all", name: "All Places" },
     { id: "restaurant", name: "Restaurants" },
     { id: "bar", name: "Bars" },
@@ -26,11 +43,22 @@ export default function Home() {
     );
   }, [selectedCategory]);
 
-  React.useEffect(() => {
-    if (webApp) {
-      webApp.expand();
-    }
-  }, [webApp]);
+  useEffect(() => {
+    const initializeApp = async () => {
+      try {
+        await telegramSDK.initialize();
+        const { user } = await apiClient.validateAuth();
+        setUser(user);
+        setDebugInfo(`Init data: ${telegramSDK.getInitDataRaw()}`);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (error: any) {
+        console.log("Init failed:", error);
+        setError(error.message || "Failed to initialize app");
+      }
+    };
+
+    initializeApp();
+  }, []);
 
   return (
     <div className="fixed inset-0 flex flex-col bg-white">
@@ -44,7 +72,14 @@ export default function Home() {
           <div className="flex items-center space-x-3">
             <button className="flex items-center text-sm text-gray-600 space-x-1 bg-gray-50 px-3 py-1.5 rounded-full">
               <MapPin className="w-4 h-4 text-[#FF7352]" />
-              <span>Tashkent</span>
+              <span>
+                Tashkent
+                {user && (
+                  <span className="ml-1 text-blue-600">
+                    • {user.first_name}
+                  </span>
+                )}
+              </span>
               <span className="text-xs text-gray-400">2.5 km</span>
             </button>
             <button className="p-2 hover:bg-gray-100 rounded-full">
@@ -84,6 +119,29 @@ export default function Home() {
       {/* Main Content - Scrollable */}
       <main className="flex-1 overflow-y-auto px-4">
         <div className="py-4">
+          {/* User Info Section (если есть данные) */}
+          {isReady && user && (
+            <div className="mb-6 p-4 bg-blue-50 rounded-xl">
+              <h3 className="font-semibold text-blue-800 mb-2">
+                Welcome, {user.first_name}!
+              </h3>
+              <div className="text-sm text-blue-600">
+                <p>User ID: {user.id}</p>
+                {user.username && <p>Username: @{user.username}</p>}
+                {user.language_code && <p>Language: {user.language_code}</p>}
+                {/* <p>User Agent: {user.auth}</p> */}
+              </div>
+              <h3>
+                <Link
+                  href="/test"
+                  className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                  Test
+                </Link>
+              </h3>
+            </div>
+          )}
+
           {/* Popular Section */}
           <div className="mb-8">
             <div className="flex justify-between items-center mb-4">
@@ -155,8 +213,8 @@ export default function Home() {
                     <div className="flex items-center mt-1">
                       <Star className="w-4 h-4 text-[#F3E038] fill-current" />
                       <span className="text-sm text-gray-600 ml-1">
-                        {place.rating} ({place.reviewCount.toLocaleString()}{" "}
-                        reviews)
+                        {place.rating} (
+                        {numberFormatter.format(place.reviewCount)} reviews)
                       </span>
                     </div>
                   </div>
@@ -164,6 +222,18 @@ export default function Home() {
               ))}
             </div>
           </div>
+
+          {/* Debug Info (только в development) */}
+          {process.env.NODE_ENV === "development" && isReady && (
+            <div className="mt-8 p-4 bg-gray-100 rounded-xl">
+              <h3 className="font-semibold mb-2">Debug Info</h3>
+              <div className="text-sm space-y-1">
+                <p>
+                  <strong>Ready:</strong> {isReady ? "Yes" : "No"}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 

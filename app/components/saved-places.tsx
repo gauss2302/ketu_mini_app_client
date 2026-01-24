@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { ChevronRight, Star, MapPin } from "lucide-react";
 import { savedPlaces } from "@/data/mock-places";
 
+const numberFormatter = new Intl.NumberFormat("en-US");
+
 export const SavedPlacesPage = () => {
   const router = useRouter();
 
@@ -46,7 +48,7 @@ export const SavedPlacesPage = () => {
                     <Star className="w-4 h-4 text-yellow-400 fill-current" />
                     <span className="ml-1 font-medium">{place.rating}</span>
                     <span className="text-gray-500 ml-1">
-                      ({place.reviewCount.toLocaleString()})
+                      ({numberFormatter.format(place.reviewCount)})
                     </span>
                   </div>
                   <div className="mx-2 text-gray-300">•</div>

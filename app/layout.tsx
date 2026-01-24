@@ -1,17 +1,23 @@
-import { Inter } from "next/font/google";
-import { TelegramProvider } from "./components/providers/telegram-provider";
+import Script from "next/script";
+import { TelegramProvider } from "@/app/components/providers/telegram-provider";
 import "./globals.css";
-
-const inter = Inter({ subsets: ["latin"] });
+import React from "react";
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  children: any;
+}) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <Script
+          src="https://telegram.org/js/telegram-web-app.js"
+          strategy="beforeInteractive"
+        />
+      </head>
+      <body suppressHydrationWarning>
         <TelegramProvider>{children}</TelegramProvider>
       </body>
     </html>

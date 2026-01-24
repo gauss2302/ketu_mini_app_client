@@ -9,7 +9,13 @@ export const BottomNav = () => {
   const pathname = usePathname();
   const router = useRouter();
 
-  const navItems = [
+  interface NavigationItems {
+    icon: React.ElementType;
+    label: string;
+    path: string;
+  }
+
+  const navItems: NavigationItems[] = [
     { icon: Home, label: "Home", path: "/" },
     { icon: Ticket, label: "Tickets", path: "/login" },
     { icon: Heart, label: "Saved", path: "/saved" },

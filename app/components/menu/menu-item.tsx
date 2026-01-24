@@ -1,6 +1,7 @@
 // src/components/menu/menu-item.tsx
 import { MenuItem } from "@/data/mock-places";
 import { Flame, Leaf } from "lucide-react";
+import React from "react";
 
 export const MenuItemCard = ({ item }: { item: MenuItem }) => {
   return (
