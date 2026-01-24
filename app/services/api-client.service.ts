@@ -131,7 +131,11 @@ class APIClientService {
 			
 			return { valid: false, user: null };
 		} catch (error) {
-			console.error("Auth validation failed", error);
+			const msg = error instanceof Error ? error.message : String(error);
+			console.error("Auth validation failed", {
+				error: msg,
+				hint: "Check browser console + backend logs. Ensure NEXT_PUBLIC_API_URL is reachable from Telegram WebView, BOT_TOKEN matches mini app bot, and you're opening the app inside Telegram (not in a regular browser).",
+			});
 			return { valid: false, user: null };
 		}
 	}
