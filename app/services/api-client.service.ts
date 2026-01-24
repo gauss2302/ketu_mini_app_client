@@ -119,9 +119,12 @@ class APIClientService {
 
 			if (response.tokens && response.tokens.accessToken) {
 				this.accessToken = response.tokens.accessToken;
-				// Store refresh token in localStorage for future use
-				if (response.tokens.refreshToken) {
-					localStorage.setItem('refreshToken', response.tokens.refreshToken);
+				// Store refresh token for future use. Note: localStorage can be cleared on
+				// some Telegram WebViews (iOS, Linux Desktop). Prefer Init Data auth in
+				// simple flows; we fall back to initData when no token.
+				// @see https://habr.com/ru/companies/doubletapp/articles/917286/
+				if (response.tokens.refreshToken && typeof localStorage !== "undefined") {
+					localStorage.setItem("refreshToken", response.tokens.refreshToken);
 				}
 				return { valid: true, user: response.user };
 			}
