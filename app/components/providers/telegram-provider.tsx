@@ -7,8 +7,8 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import { telegramSDK } from "@/app/services/telegram-sdk.service";
 import { apiClient } from "@/app/services/api-client.service";
+import { useRawInitData } from "@telegram-apps/sdk-react";
 
 interface TelegramUser {
   id: number;
@@ -48,6 +48,11 @@ const TelegramContext = createContext<TelegramContextType>(defaultContext);
 
 function parseInitData(initDataRaw: string): Record<string, any> | null {
   try {
+    const trimmed = initDataRaw.trim();
+    if (trimmed.startsWith("{")) {
+      return JSON.parse(trimmed) as Record<string, any>;
+    }
+
     const params = new URLSearchParams(initDataRaw);
     const decoded: Record<string, any> = {};
     for (const [key, value] of params.entries()) {
@@ -65,6 +70,7 @@ function parseInitData(initDataRaw: string): Record<string, any> | null {
 }
 
 export function TelegramProvider({ children }: { children: any }) {
+  const sdkRawInitData = useRawInitData();
   const [webApp, setWebApp] = useState<any | null>(null);
   const [user, setUser] = useState<TelegramUser | null>(null);
   const [initDataRaw, setInitDataRaw] = useState<string | null>(null);
@@ -76,27 +82,37 @@ export function TelegramProvider({ children }: { children: any }) {
   useEffect(() => {
     const initialize = async () => {
       try {
-        await telegramSDK.initialize();
-        const rawData = telegramSDK.getInitDataRaw();
-        if (!rawData) {
-          throw new Error("Failed to retrieve initData");
+        // Prefer WebApp initData when available, fallback to SDK hook.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const resolvedInitData =
+          (typeof window !== "undefined" &&
+            (window as any).Telegram?.WebApp?.initData) ||
+          sdkRawInitData;
+
+        if (!resolvedInitData) {
+          if (typeof window !== "undefined" && !(window as any).Telegram?.WebApp) {
+            setError("Not running in Telegram Web App environment");
+            setIsReady(false);
+          }
+          return;
         }
 
-        setInitDataRaw(rawData);
-        setInitData(parseInitData(rawData));
+        apiClient.setInitDataRaw(resolvedInitData);
+        setInitDataRaw(resolvedInitData);
+        setInitData(parseInitData(resolvedInitData));
         setWebApp((window as any).Telegram?.WebApp || null);
 
-        const authResponse = await apiClient.validateAuth();
+        const authResponse = await apiClient.validateAuth(resolvedInitData);
         if (authResponse.valid && authResponse.user) {
           setUser(authResponse.user);
-          // Tokens are stored in apiClient and localStorage
         }
 
         (window as any).Telegram?.WebApp?.ready();
         setIsReady(true);
+        setError(null);
 
         console.log("TelegramProvider initialized", {
-          initDataRaw: rawData,
+          initDataRaw: resolvedInitData,
           user: authResponse.user,
         });
       } catch (err) {
@@ -109,7 +125,7 @@ export function TelegramProvider({ children }: { children: any }) {
     };
 
     initialize();
-  }, []);
+  }, [sdkRawInitData]);
 
   const value: TelegramContextType = {
     webApp,

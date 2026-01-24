@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useCallback } from 'react';
-import { init, backButton,  } from '@telegram-apps/sdk';
+import { backButton } from '@telegram-apps/sdk-react';
 
 interface UseBackButtonOptions {
 	onBack?: () => void;
@@ -14,8 +14,11 @@ export const useBackButton = ({ onBack, autoShow = true }: UseBackButtonOptions 
 	useEffect(() => {
 		const initializeBackButton = async () => {
 			try {
-				// Убеждаемся что SDK инициализирован
-				init();
+				// Avoid initializing outside Telegram WebApp
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				if (typeof window === "undefined" || !(window as any).Telegram?.WebApp) {
+					return;
+				}
 
 				// Монтируем Back Button если еще не смонтирован
 				if (!backButton.isMounted()) {

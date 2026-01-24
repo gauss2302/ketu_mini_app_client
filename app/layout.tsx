@@ -2,6 +2,7 @@ import Script from "next/script";
 import { TelegramProvider } from "@/app/components/providers/telegram-provider";
 import "./globals.css";
 import React from "react";
+import { SDKProvider } from "@telegram-apps/sdk-react";
 
 export default function RootLayout({
   children,
@@ -18,7 +19,9 @@ export default function RootLayout({
         />
       </head>
       <body suppressHydrationWarning>
-        <TelegramProvider>{children}</TelegramProvider>
+        <SDKProvider acceptCustomStyles debug={process.env.NODE_ENV === "development"}>
+          <TelegramProvider>{children}</TelegramProvider>
+        </SDKProvider>
       </body>
     </html>
   );

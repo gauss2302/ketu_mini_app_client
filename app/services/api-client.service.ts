@@ -1,4 +1,3 @@
-import {telegramSDK} from "@/app/services/telegram-sdk.service";
 import {User} from "@telegram-apps/sdk-react";
 
 export interface BackendUser {
@@ -18,10 +17,11 @@ class APIClientService {
 	private static instance: APIClientService;
 	private readonly baseUrl: string;
 	private accessToken: string | null = null;
+	private initDataRaw: string | null = null;
 
 	private constructor(baseUrl?: string) {
 		// Use environment variable for backend URL, fallback to /api for Next.js routes
-		this.baseUrl = baseUrl || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+		this.baseUrl = baseUrl || process.env.NEXT_PUBLIC_API_URL || "/api";
 	}
 
 	public static getInstance(baseURL?: string): APIClientService {
@@ -39,9 +39,7 @@ class APIClientService {
 			};
 		}
 
-		const initDataRaw = telegramSDK.getInitDataRaw();
-
-		if(!initDataRaw) {
+		if(!this.initDataRaw) {
 			// If we don't have a token AND we don't have initData, we can't authenticate.
 			// However, for the initial validateAuth call, we might not need headers if we send initData in body.
 			// But for other requests, we need auth.
@@ -50,7 +48,7 @@ class APIClientService {
 
 		// Fallback to sending initData directly if no token yet (though backend expects token for other endpoints usually)
 		return {
-			'Authorization': `tma ${initDataRaw}`,
+			'Authorization': `tma ${this.initDataRaw}`,
 			'Content-Type': 'application/json',
 		}
 	}
@@ -99,14 +97,17 @@ class APIClientService {
 	}
 
 	// Специфичные методы для Telegram Mini App
-	public async validateAuth(): Promise<{ valid: boolean; user: User | null }> {
-		const initData = telegramSDK.getInitDataRaw();
+	public async validateAuth(initDataOverride?: string): Promise<{ valid: boolean; user: User | null }> {
+		const initData = initDataOverride || this.initDataRaw;
 		if (!initData) {
 			console.error("No initData available for validation");
 			return { valid: false, user: null };
 		}
 
 		try {
+			if (initDataOverride) {
+				this.initDataRaw = initDataOverride;
+			}
 			// Call Express backend auth endpoint
 			const response = await this.post<{ 
 				message: string; 
@@ -142,6 +143,10 @@ class APIClientService {
 
 	public setAccessToken(token: string): void {
 		this.accessToken = token;
+	}
+
+	public setInitDataRaw(initData: string | null): void {
+		this.initDataRaw = initData;
 	}
 
 	public getAccessToken(): string | null {

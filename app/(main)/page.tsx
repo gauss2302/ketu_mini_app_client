@@ -1,26 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Search, MapPin, Heart, Star, Menu, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { savedPlaces } from "@/data/mock-places";
-import { useTelegram } from "@/app/hooks/use-telegram-webapp";
-
-import { telegramSDK } from "@/app/services/telegram-sdk.service";
-import { User } from "@telegram-apps/sdk-react";
-import { apiClient } from "../services/api-client.service";
+import { useTelegram } from "@/app/components/providers/telegram-provider";
 
 const numberFormatter = new Intl.NumberFormat("en-US");
 
 export default function Home() {
-  const { isReady } = useTelegram();
-
-  const [user, setUser] = useState<User | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [error, setError] = useState<string | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [debugInfo, setDebugInfo] = useState<string | null>(null);
+  const { isReady, user } = useTelegram();
 
   const [selectedCategory, setSelectedCategory] = React.useState("all");
 
@@ -43,23 +33,6 @@ export default function Home() {
       place.type.toLowerCase().includes(selectedCategory.toLowerCase())
     );
   }, [selectedCategory]);
-
-  useEffect(() => {
-    const initializeApp = async () => {
-      try {
-        await telegramSDK.initialize();
-        const { user } = await apiClient.validateAuth();
-        setUser(user);
-        setDebugInfo(`Init data: ${telegramSDK.getInitDataRaw()}`);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (error: any) {
-        console.log("Init failed:", error);
-        setError(error.message || "Failed to initialize app");
-      }
-    };
-
-    initializeApp();
-  }, []);
 
   return (
     <div className="fixed inset-0 flex flex-col bg-white">
