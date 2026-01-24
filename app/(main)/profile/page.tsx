@@ -35,7 +35,7 @@ import { useRouter } from "next/navigation";
 import { apiClient, BackendUser } from "@/app/services/api-client.service";
 import { useTelegram } from "@/app/components/providers/telegram-provider";
 
-export const ProfilePage = () => {
+const ProfilePage = () => {
   const { isReady } = useTelegram();
   const [profile, setProfile] = useState<BackendUser | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
