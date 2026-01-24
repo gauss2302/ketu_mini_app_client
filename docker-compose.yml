@@ -9,4 +9,5 @@ services:
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:18080}
+      BOT_TOKEN: ${BOT_TOKEN}
     restart: unless-stopped
