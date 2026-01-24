@@ -22,7 +22,6 @@ export class TelegramSDKService {
 	}
 
 	public async initialize(): Promise<void> {
-		console.log(init());
 		if (this._isInitialized) {
 			console.log("Telegram SDK already initialized");
 			return;
