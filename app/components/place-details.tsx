@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { ArrowLeft, MapPin, Clock, Star, Heart } from "lucide-react";
 import { savedPlaces } from "@/data/mock-places";
 import { RestaurantMenu } from "./menu/restaurant-menu";
@@ -23,10 +24,12 @@ export const PlaceDetails = ({ placeId }: PlaceDetailsProps) => {
       {/* Hero Section */}
       <div className="relative h-80">
         <div className="relative w-full h-full overflow-hidden">
-          <img
+          <Image
             src={place.images[0]}
             alt={place.name}
-            className="w-full h-full object-cover"
+            fill
+            sizes="100vw"
+            className="object-cover"
           />
 
           {/* Navigation Controls */}

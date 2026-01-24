@@ -2,14 +2,17 @@
 import { MenuItem } from "@/data/mock-places";
 import { Flame, Leaf } from "lucide-react";
 import React from "react";
+import Image from "next/image";
 
 export const MenuItemCard = ({ item }: { item: MenuItem }) => {
   return (
     <div className="flex space-x-3 p-4 bg-white rounded-xl">
       <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0">
-        <img
+        <Image
           src={item.image}
           alt={item.name}
+          width={96}
+          height={96}
           className="w-full h-full object-cover"
         />
       </div>

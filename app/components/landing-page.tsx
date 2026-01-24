@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import {
   Search,
   MapPin,
@@ -61,11 +62,13 @@ const ExplorePage = () => {
           <button className="text-[#FF7352] text-sm">See all</button>
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <div className="relative rounded-2xl overflow-hidden">
-            <img
-              src="./club.jpg"
+          <div className="relative rounded-2xl overflow-hidden h-48">
+            <Image
+              src="/club.jpg"
               alt="Alley Palace"
-              className="w-full h-48 object-cover"
+              fill
+              sizes="(min-width: 768px) 50vw, 100vw"
+              className="object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
             <button className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -79,11 +82,13 @@ const ExplorePage = () => {
               </div>
             </div>
           </div>
-          <div className="relative rounded-2xl overflow-hidden">
-            <img
-              src="./club.jpg"
+          <div className="relative rounded-2xl overflow-hidden h-48">
+            <Image
+              src="/club.jpg"
               alt="Coeurdes Alpes"
-              className="w-full h-48 object-cover"
+              fill
+              sizes="(min-width: 768px) 50vw, 100vw"
+              className="object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
             <button className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -104,11 +109,13 @@ const ExplorePage = () => {
       <div>
         <h2 className="text-lg font-semibold mb-4">Recommended</h2>
         <div className="space-y-4">
-          <div className="relative rounded-2xl overflow-hidden">
-            <img
-              src="./club.jpg"
+          <div className="relative rounded-2xl overflow-hidden h-32">
+            <Image
+              src="/club.jpg"
               alt="Explore Aspen"
-              className="w-full h-32 object-cover"
+              fill
+              sizes="100vw"
+              className="object-cover"
             />
             <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-sm text-white text-sm px-2 py-1 rounded">
               4N/5D
@@ -122,11 +129,13 @@ const ExplorePage = () => {
               </div>
             </div>
           </div>
-          <div className="relative rounded-2xl overflow-hidden">
-            <img
-              src="./club.jpg"
+          <div className="relative rounded-2xl overflow-hidden h-32">
+            <Image
+              src="/club.jpg"
               alt="Luxurious Aspen"
-              className="w-full h-32 object-cover"
+              fill
+              sizes="100vw"
+              className="object-cover"
             />
             <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-sm text-white text-sm px-2 py-1 rounded">
               2N/3D

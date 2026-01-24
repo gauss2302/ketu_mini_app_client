@@ -3,10 +3,11 @@
 import React, { useState, useEffect } from "react";
 import { Search, MapPin, Heart, Star, Menu, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { savedPlaces } from "@/data/mock-places";
 import { useTelegram } from "@/app/hooks/use-telegram-webapp";
 
-import { telegramSDK, TelegramSDKService } from "@/app/services/telegram-sdk.service";
+import { telegramSDK } from "@/app/services/telegram-sdk.service";
 import { User } from "@telegram-apps/sdk-react";
 import { apiClient } from "../services/api-client.service";
 
@@ -158,11 +159,15 @@ export default function Home() {
                   key={place.id}
                   className="relative rounded-2xl overflow-hidden"
                 >
-                  <img
-                    src={place.images[0]}
-                    alt={place.name}
-                    className="w-full h-48 object-cover"
-                  />
+                  <div className="relative w-full h-48">
+                    <Image
+                      src={place.images[0]}
+                      alt={place.name}
+                      fill
+                      sizes="(min-width: 768px) 50vw, 100vw"
+                      className="object-cover"
+                    />
+                  </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                   <button className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
                     <Heart className="w-5 h-5 text-white" />
@@ -199,9 +204,11 @@ export default function Home() {
                   className="bg-gray-50 p-4 rounded-xl flex items-center space-x-4"
                 >
                   <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                    <img
+                    <Image
                       src={place.images[0]}
                       alt={place.name}
+                      width={64}
+                      height={64}
                       className="w-full h-full object-cover"
                     />
                   </div>

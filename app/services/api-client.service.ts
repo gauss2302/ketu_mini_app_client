@@ -56,8 +56,6 @@ class APIClientService {
 	}
 
 	private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-		const method = (options.method ?? "GET").toUpperCase();
-
 		const url = `${this.baseUrl}${endpoint}`;
 
 		try {

@@ -5,6 +5,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Star, MapPin } from "lucide-react";
 import { savedPlaces } from "@/data/mock-places";
+import Image from "next/image";
 
 const numberFormatter = new Intl.NumberFormat("en-US");
 
@@ -29,9 +30,11 @@ export const SavedPlacesPage = () => {
           >
             <div className="flex p-4">
               <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0">
-                <img
+                <Image
                   src={place.images[0]}
                   alt={place.name}
+                  width={96}
+                  height={96}
                   className="w-full h-full object-cover"
                 />
               </div>
