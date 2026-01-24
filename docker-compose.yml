@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   frontend:
     build:
@@ -8,8 +6,7 @@ services:
     container_name: ketu_frontend
     ports:
       - "3000:3000"
-    env_file:
-      - .env.production
     environment:
       NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:18080}
     restart: unless-stopped
