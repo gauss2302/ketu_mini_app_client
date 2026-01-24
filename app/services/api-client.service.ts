@@ -13,6 +13,8 @@ export interface BackendUser {
 	updated_at: string;
 }
 
+const ACCESS_TOKEN_KEY = "accessToken";
+
 class APIClientService {
 	private static instance: APIClientService;
 	private readonly baseUrl: string;
@@ -20,8 +22,18 @@ class APIClientService {
 	private initDataRaw: string | null = null;
 
 	private constructor(baseUrl?: string) {
-		// Use environment variable for backend URL, fallback to /api for Next.js routes
+		// Use environment variable for backend URL (ketu_server). Fallback /api hits Next.js only;
+		// auth/profile must go to backend for Postgres + JWT.
 		this.baseUrl = baseUrl || process.env.NEXT_PUBLIC_API_URL || "/api";
+		if (typeof window !== "undefined" && this.baseUrl === "/api") {
+			console.warn(
+				"[API] NEXT_PUBLIC_API_URL is unset; using /api. Set it to your ketu_server URL (e.g. http://localhost:18080) so auth and /user/profile reach the backend."
+			);
+		}
+		if (typeof window !== "undefined") {
+			const stored = localStorage.getItem(ACCESS_TOKEN_KEY);
+			if (stored) this.accessToken = stored;
+		}
 	}
 
 	public static getInstance(baseURL?: string): APIClientService {
@@ -119,12 +131,15 @@ class APIClientService {
 
 			if (response.tokens && response.tokens.accessToken) {
 				this.accessToken = response.tokens.accessToken;
-				// Store refresh token for future use. Note: localStorage can be cleared on
-				// some Telegram WebViews (iOS, Linux Desktop). Prefer Init Data auth in
-				// simple flows; we fall back to initData when no token.
-				// @see https://habr.com/ru/companies/doubletapp/articles/917286/
-				if (response.tokens.refreshToken && typeof localStorage !== "undefined") {
-					localStorage.setItem("refreshToken", response.tokens.refreshToken);
+				if (typeof localStorage !== "undefined") {
+					localStorage.setItem(ACCESS_TOKEN_KEY, response.tokens.accessToken);
+					// Store refresh token for future use. Note: localStorage can be cleared on
+					// some Telegram WebViews (iOS, Linux Desktop). Prefer Init Data auth in
+					// simple flows; we fall back to initData when no token.
+					// @see https://habr.com/ru/companies/doubletapp/articles/917286/
+					if (response.tokens.refreshToken) {
+						localStorage.setItem("refreshToken", response.tokens.refreshToken);
+					}
 				}
 				return { valid: true, user: response.user };
 			}
@@ -158,6 +173,15 @@ class APIClientService {
 
 	public getAccessToken(): string | null {
 		return this.accessToken;
+	}
+
+	/** Clear tokens from memory and localStorage (e.g. on logout). */
+	public clearAuth(): void {
+		this.accessToken = null;
+		if (typeof localStorage !== "undefined") {
+			localStorage.removeItem(ACCESS_TOKEN_KEY);
+			localStorage.removeItem("refreshToken");
+		}
 	}
 }
 

@@ -28,7 +28,7 @@ import { apiClient, BackendUser } from "@/app/services/api-client.service";
 import { useTelegram } from "@/app/components/providers/telegram-provider";
 
 const ProfilePage = () => {
-  const { isReady } = useTelegram();
+  const { isReady, user } = useTelegram();
   const [profile, setProfile] = useState<BackendUser | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -37,6 +37,12 @@ const ProfilePage = () => {
   useEffect(() => {
     const loadProfile = async () => {
       if (!isReady) return;
+      const hasAuth = !!user || !!apiClient.getAccessToken();
+      if (!hasAuth) {
+        setIsLoading(false);
+        setErrorMessage("Sign in required. Open this app from Telegram.");
+        return;
+      }
       setIsLoading(true);
       setErrorMessage(null);
       try {
@@ -53,7 +59,7 @@ const ProfilePage = () => {
     };
 
     loadProfile();
-  }, [isReady]);
+  }, [isReady, user]);
 
   const menuItems = [
     { icon: GiftIcon, label: "My Bookings", badge: "2 Active" },
