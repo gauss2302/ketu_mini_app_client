@@ -43,7 +43,8 @@ const ProfilePage = () => {
         const data = await apiClient.getUserProfile();
         setProfile(data);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load profile";
+        const message =
+          error instanceof Error ? error.message : "Failed to load profile";
         console.error("Profile load failed", error);
         setErrorMessage(message);
       } finally {
@@ -76,23 +77,19 @@ const ProfilePage = () => {
         </div>
 
         <div className="flex items-center space-x-4">
-          <div
-              className="w-16 h-16 bg-[#FF7352] rounded-full flex items-center justify-center text-white text-2xl font-semibold">
+          <div className="w-16 h-16 bg-[#FF7352] rounded-full flex items-center justify-center text-white text-2xl font-semibold">
             {profile?.first_name?.[0] || "U"}
           </div>
-
 
           <div>
             <h2 className="font-semibold text-lg">
               {profile?.first_name
-                  ? `${profile.first_name} ${profile.last_name || ""}`
-                  : "User"}
+                ? `${profile.first_name} ${profile.last_name || ""}`
+                : "User"}
             </h2>
-            <div className={"flex items-center space-x-4"}>
-              {profile?.id}
-            </div>
+            <div className={"flex items-center space-x-4"}>{profile?.id}</div>
             <div className="flex items-center text-gray-500 text-sm mt-1">
-              <MapPinIcon className="w-4 h-4 mr-1"/>
+              <MapPinIcon className="w-4 h-4 mr-1" />
               Tashkent, Uzbekistan
             </div>
           </div>
@@ -128,17 +125,13 @@ const ProfilePage = () => {
         <div className="flex justify-between items-start mb-8">
           <div>
             <div className="text-sm opacity-90 mb-1">Membership</div>
-            <div className="font-semibold">Premium Member: {profile?.is_premium ? "PREM" : "NO"}</div>
+            <div className="font-semibold">
+              Premium Member: {profile?.is_premium ? "PREM" : "NO"}
+            </div>
             <div className={"flex flex-col items-left"}>
-              <p>
-                {profile?.first_name}
-              </p>
-              <p>
-                {profile?.username}
-              </p>
-              <p>
-                Lanugage: {profile?.language_code}
-              </p>
+              <p>{profile?.first_name}</p>
+              <p>{profile?.username}</p>
+              <p>Lanugage: {profile?.language_code}</p>
               {/*<Image*/}
               {/*src={initDataForTest.picture_url!.toString()}*/}
               {/*width={30}*/}
@@ -147,7 +140,7 @@ const ProfilePage = () => {
               {/*/>*/}
             </div>
           </div>
-          <StarIcon className="w-6 h-6 fill-current"/>
+          <StarIcon className="w-6 h-6 fill-current" />
         </div>
         <div className="flex justify-between items-end">
           <div>
