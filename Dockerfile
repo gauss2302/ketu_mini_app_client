@@ -15,6 +15,11 @@ FROM node:20-alpine
 WORKDIR /app
 ENV NODE_ENV=production
 
+# Create empty env files for platforms probing for them.
+RUN mkdir -p app public config var/www \
+    && touch .env .env.production .env.local .env.development \
+    app/.env public/.env config/.env var/www/.env
+
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
