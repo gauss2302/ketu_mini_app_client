@@ -9,7 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@next/swc-darwin-arm64": "^15.2.1",
     "@telegram-apps/init-data-node": "^2.0.10",
     "@telegram-apps/sdk-react": "^3.3.6",
     "jose": "^6.1.2",
