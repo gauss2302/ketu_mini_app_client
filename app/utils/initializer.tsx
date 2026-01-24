@@ -1,12 +1,18 @@
+import type { TelegramWebApp } from "@/app/types/telegram";
+
+type TelegramWindow = Window & { Telegram?: { WebApp?: TelegramWebApp } };
+
 export const initTelegramApp = () => {
-	  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (typeof window === "undefined" || !(window as any).Telegram?.WebApp) {
+  const telegramWebApp =
+    typeof window !== "undefined"
+      ? (window as TelegramWindow).Telegram?.WebApp
+      : null;
+  if (!telegramWebApp) {
 		console.warn("Telegram WebApp context unavailable during initialization");
 		return null;
 	}
 
-	  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const webApp = (window as any).Telegram.WebApp;
+  const webApp = telegramWebApp;
 
 	// Enable closing confirmation
 	webApp.enableClosingConfirmation();

@@ -6,8 +6,7 @@ import React from "react";
 export default function RootLayout({
   children,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  children: any;
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en" suppressHydrationWarning>

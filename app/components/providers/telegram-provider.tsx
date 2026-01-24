@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { apiClient } from "@/app/services/api-client.service";
 import { init, useRawInitData } from "@telegram-apps/sdk-react";
+import type { TelegramWebApp } from "@/app/types/telegram";
 
 interface TelegramUser {
   id: number;
@@ -25,10 +26,10 @@ interface AuthTokens {
 }
 
 interface TelegramContextType {
-  webApp: any | null; // Replace with WebApp type from @telegram-apps/sdk if available
+  webApp: TelegramWebApp | null;
   user: TelegramUser | null;
   initDataRaw: string | null;
-  initData: Record<string, any> | null;
+  initData: Record<string, unknown> | null;
   tokens: AuthTokens | null;
   error: string | null;
   isReady: boolean;
@@ -46,15 +47,17 @@ const defaultContext: TelegramContextType = {
 
 const TelegramContext = createContext<TelegramContextType>(defaultContext);
 
-function parseInitData(initDataRaw: string): Record<string, any> | null {
+type TelegramWindow = Window & { Telegram?: { WebApp?: TelegramWebApp } };
+
+function parseInitData(initDataRaw: string): Record<string, unknown> | null {
   try {
     const trimmed = initDataRaw.trim();
     if (trimmed.startsWith("{")) {
-      return JSON.parse(trimmed) as Record<string, any>;
+      return JSON.parse(trimmed) as Record<string, unknown>;
     }
 
     const params = new URLSearchParams(initDataRaw);
-    const decoded: Record<string, any> = {};
+    const decoded: Record<string, unknown> = {};
     for (const [key, value] of params.entries()) {
       try {
         decoded[key] = JSON.parse(value);
@@ -69,13 +72,13 @@ function parseInitData(initDataRaw: string): Record<string, any> | null {
   }
 }
 
-export function TelegramProvider({ children }: { children: any }) {
+export function TelegramProvider({ children }: { children: React.ReactNode }) {
   const sdkRawInitData = useRawInitData();
   const hasInitializedRef = useRef(false);
-  const [webApp, setWebApp] = useState<any | null>(null);
+  const [webApp, setWebApp] = useState<TelegramWebApp | null>(null);
   const [user, setUser] = useState<TelegramUser | null>(null);
   const [initDataRaw, setInitDataRaw] = useState<string | null>(null);
-  const [initData, setInitData] = useState<Record<string, any> | null>(null);
+  const [initData, setInitData] = useState<Record<string, unknown> | null>(null);
   // const [tokens, setTokens] = useState<AuthTokens | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isReady, setIsReady] = useState<boolean>(false);
@@ -84,7 +87,9 @@ export function TelegramProvider({ children }: { children: any }) {
     const initialize = async () => {
       try {
         const telegramWebApp =
-          typeof window !== "undefined" ? (window as any).Telegram?.WebApp : null;
+          typeof window !== "undefined"
+            ? (window as TelegramWindow).Telegram?.WebApp
+            : null;
 
         if (telegramWebApp && !hasInitializedRef.current) {
           init();

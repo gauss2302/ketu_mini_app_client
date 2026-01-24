@@ -3,6 +3,9 @@
 
 import { useEffect, useCallback } from 'react';
 import { backButton } from '@telegram-apps/sdk-react';
+import type { TelegramWebApp } from '@/app/types/telegram';
+
+type TelegramWindow = Window & { Telegram?: { WebApp?: TelegramWebApp } };
 
 interface UseBackButtonOptions {
 	onBack?: () => void;
@@ -16,7 +19,11 @@ export const useBackButton = ({ onBack, autoShow = true }: UseBackButtonOptions 
 			try {
 				// Avoid initializing outside Telegram WebApp
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				if (typeof window === "undefined" || !(window as any).Telegram?.WebApp) {
+				const telegramWebApp =
+					typeof window !== "undefined"
+						? (window as TelegramWindow).Telegram?.WebApp
+						: null;
+				if (!telegramWebApp) {
 					return;
 				}
 

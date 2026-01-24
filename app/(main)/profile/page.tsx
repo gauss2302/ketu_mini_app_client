@@ -11,26 +11,18 @@ import {
   HelpCircle,
   Bell,
   LogOut,
+  type LucideIcon,
 } from "lucide-react";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const SettingsIcon = Settings as any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const ChevronRightIcon = ChevronRight as any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const MapPinIcon = MapPin as any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const StarIcon = Star as any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const HeartIcon = Heart as any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const GiftIcon = Gift as any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const HelpCircleIcon = HelpCircle as any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const BellIcon = Bell as any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const LogOutIcon = LogOut as any;
+const SettingsIcon: LucideIcon = Settings;
+const ChevronRightIcon: LucideIcon = ChevronRight;
+const MapPinIcon: LucideIcon = MapPin;
+const StarIcon: LucideIcon = Star;
+const HeartIcon: LucideIcon = Heart;
+const GiftIcon: LucideIcon = Gift;
+const HelpCircleIcon: LucideIcon = HelpCircle;
+const BellIcon: LucideIcon = Bell;
+const LogOutIcon: LucideIcon = LogOut;
 import { useRouter } from "next/navigation";
 import { apiClient, BackendUser } from "@/app/services/api-client.service";
 import { useTelegram } from "@/app/components/providers/telegram-provider";

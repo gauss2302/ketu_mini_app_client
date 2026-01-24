@@ -2,12 +2,18 @@
 
 import { hapticFeedback } from "@telegram-apps/sdk-react";
 import { useCallback } from "react";
+import type { TelegramWebApp } from "@/app/types/telegram";
+
+type TelegramWindow = Window & { Telegram?: { WebApp?: TelegramWebApp } };
 
 export const useHapticFeedback = () => {
   const impact = useCallback(
     (style: "light" | "medium" | "heavy" | "rigid" | "soft") => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if ((window as any).Telegram?.WebApp) {
+      const telegramWebApp =
+        typeof window !== "undefined"
+          ? (window as TelegramWindow).Telegram?.WebApp
+          : null;
+      if (telegramWebApp) {
         hapticFeedback.impactOccurred(style);
       }
     },
@@ -15,15 +21,21 @@ export const useHapticFeedback = () => {
   );
 
   const notification = useCallback((type: "error" | "success" | "warning") => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((window as any).Telegram?.WebApp) {
+    const telegramWebApp =
+      typeof window !== "undefined"
+        ? (window as TelegramWindow).Telegram?.WebApp
+        : null;
+    if (telegramWebApp) {
       hapticFeedback.notificationOccurred(type);
     }
   }, []);
 
   const selection = useCallback(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((window as any).Telegram?.WebApp) {
+    const telegramWebApp =
+      typeof window !== "undefined"
+        ? (window as TelegramWindow).Telegram?.WebApp
+        : null;
+    if (telegramWebApp) {
       hapticFeedback.selectionChanged();
     }
   }, []);
