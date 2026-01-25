@@ -191,40 +191,73 @@ export function TelegramBootstrap({
         apiClient.setInitDataRaw(resolvedInitData);
         
         // Authenticate with backend
-        console.log("[TG Auth] Authenticating with backend...");
+        console.log("[TG Auth] Authenticating with backend...", {
+          apiUrl: apiClient.getBaseUrl(),
+          initDataLength: resolvedInitData.length,
+        });
         debugInfo.authStatus = "authenticating";
         
-        const authResponse = await apiClient.validateAuth(resolvedInitData);
+        try {
+          const authResponse = await apiClient.validateAuth(resolvedInitData);
 
-        if (authResponse.valid && authResponse.user) {
-          console.log("[TG Auth] Authentication successful for user:", authResponse.user.id);
-          hasAuthenticatedRef.current = true;
-          
-          // Convert server response (snake_case) to User format (camelCase)
-          const user = serverUserToUser(authResponse.user);
+          if (authResponse.valid && authResponse.user) {
+            console.log("[TG Auth] Authentication successful for user:", authResponse.user.id);
+            hasAuthenticatedRef.current = true;
+            
+            // Convert server response (snake_case) to User format (camelCase)
+            const user = serverUserToUser(authResponse.user);
+            
+            onUpdate({
+              webApp: telegramWebApp,
+              user: user,
+              initDataRaw: resolvedInitData,
+              initData: parsedInitData as InitData | null,
+              tokens: {
+                accessToken: apiClient.getAccessToken() || "",
+                refreshToken: localStorage.getItem("refreshToken") || "",
+              },
+              error: null,
+              isReady: true,
+              debugInfo: { ...debugInfo, authStatus: "authenticated" },
+            });
+          } else {
+            console.error("[TG Auth] Authentication failed - invalid response:", {
+              valid: authResponse.valid,
+              hasUser: !!authResponse.user,
+              userId: authResponse.user?.id,
+            });
+            
+            // Check browser console for detailed error logs from API client
+            const errorMessage = "Authentication failed. Check browser console for details.";
+            
+            onUpdate({
+              webApp: telegramWebApp,
+              initDataRaw: resolvedInitData,
+              initData: parsedInitData as InitData | null,
+              error: errorMessage,
+              isReady: true,
+              debugInfo: { 
+                ...debugInfo, 
+                authStatus: "auth_failed",
+                authError: "Response was invalid or missing user data",
+              },
+            });
+          }
+        } catch (authError) {
+          const errorMsg = authError instanceof Error ? authError.message : String(authError);
+          console.error("[TG Auth] Authentication exception:", authError);
           
           onUpdate({
             webApp: telegramWebApp,
-            user: user,
             initDataRaw: resolvedInitData,
             initData: parsedInitData as InitData | null,
-            tokens: {
-              accessToken: apiClient.getAccessToken() || "",
-              refreshToken: localStorage.getItem("refreshToken") || "",
+            error: `Authentication error: ${errorMsg}`,
+            isReady: true,
+            debugInfo: { 
+              ...debugInfo, 
+              authStatus: "auth_failed",
+              authError: errorMsg,
             },
-            error: null,
-            isReady: true,
-            debugInfo: { ...debugInfo, authStatus: "authenticated" },
-          });
-        } else {
-          console.error("[TG Auth] Authentication failed:", authResponse);
-          onUpdate({
-            webApp: telegramWebApp,
-            initDataRaw: resolvedInitData,
-            initData: parsedInitData as InitData | null,
-            error: "Authentication failed. Please try refreshing the page.",
-            isReady: true,
-            debugInfo: { ...debugInfo, authStatus: "auth_failed" },
           });
         }
 

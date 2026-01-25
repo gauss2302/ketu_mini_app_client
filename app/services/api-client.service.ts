@@ -136,14 +136,16 @@ class APIClientService {
 				this.initDataRaw = initDataOverride;
 			}
 			
+			const url = `${this.baseUrl}/auth/telegram`;
 			console.log("[API] Authenticating with backend...", {
-				url: `${this.baseUrl}/auth/telegram`,
+				url,
+				baseUrl: this.baseUrl,
 				initDataLength: initData.length,
+				initDataPreview: initData.substring(0, 100) + "...",
 			});
 
 			// Send initData in Authorization header per tma.js docs: "tma <initData>"
 			// Also send in body for backwards compatibility
-			const url = `${this.baseUrl}/auth/telegram`;
 			const response = await fetch(url, {
 				method: 'POST',
 				headers: {
@@ -153,14 +155,52 @@ class APIClientService {
 				body: JSON.stringify({ initData }),
 			});
 
+			console.log("[API] Auth response status:", {
+				status: response.status,
+				statusText: response.statusText,
+				ok: response.ok,
+				headers: Object.fromEntries(response.headers.entries()),
+			});
+
 			if (!response.ok) {
-				const errorText = await response.text();
+				let errorText: string;
+				let errorJson: unknown = null;
+				
+				try {
+					errorText = await response.text();
+					// Try to parse as JSON for better error messages
+					try {
+						errorJson = JSON.parse(errorText);
+					} catch {
+						// Not JSON, use as-is
+					}
+				} catch (e) {
+					errorText = `Failed to read error response: ${e instanceof Error ? e.message : String(e)}`;
+				}
+
+				const errorMessage = errorJson && typeof errorJson === 'object' && 'error' in errorJson
+					? String(errorJson.error)
+					: errorText;
+
+				const errorCode = errorJson && typeof errorJson === 'object' && 'code' in errorJson
+					? String(errorJson.code)
+					: `HTTP_${response.status}`;
+
 				console.error("[API] Auth request failed:", {
 					status: response.status,
 					statusText: response.statusText,
+					error: errorMessage,
+					code: errorCode,
 					body: errorText,
+					url,
 				});
-				throw new Error(`${response.status} ${response.statusText}: ${errorText}`);
+
+				// Throw error with more details
+				const error = new Error(`Authentication failed: ${errorMessage}`);
+				(error as any).status = response.status;
+				(error as any).code = errorCode;
+				(error as any).responseBody = errorText;
+				throw error;
 			}
 
 			const responseData = await response.json() as AuthResponse;
@@ -168,6 +208,7 @@ class APIClientService {
 				hasTokens: !!responseData.tokens,
 				hasUser: !!responseData.user,
 				userId: responseData.user?.id,
+				message: responseData.message,
 			});
 
 			if (responseData.tokens && responseData.tokens.accessToken) {
@@ -183,13 +224,35 @@ class APIClientService {
 				return { valid: true, user: responseData.user };
 			}
 			
+			console.warn("[API] Auth response missing tokens:", {
+				hasTokens: !!responseData.tokens,
+				hasAccessToken: !!(responseData.tokens?.accessToken),
+				responseKeys: Object.keys(responseData),
+			});
+			
 			return { valid: false, user: null };
 		} catch (error) {
 			const msg = error instanceof Error ? error.message : String(error);
+			const status = (error as any)?.status;
+			const code = (error as any)?.code;
+			const responseBody = (error as any)?.responseBody;
+			
 			console.error("[API] Auth validation failed:", {
 				error: msg,
+				status,
+				code,
+				responseBody,
+				url: `${this.baseUrl}/auth/telegram`,
 				hint: "Check: NEXT_PUBLIC_API_URL is reachable, BOT_TOKEN matches mini app bot, app opened from Telegram",
 			});
+			
+			// Re-throw with more context so bootstrap can handle it better
+			if (error instanceof Error) {
+				(error as any).apiError = true;
+				(error as any).status = status;
+				(error as any).code = code;
+			}
+			
 			return { valid: false, user: null };
 		}
 	}
@@ -256,6 +319,10 @@ class APIClientService {
 
 	public getInitDataRaw(): string | null {
 		return this.initDataRaw;
+	}
+
+	public getBaseUrl(): string {
+		return this.baseUrl;
 	}
 
 	/** Clear tokens from memory and localStorage */
