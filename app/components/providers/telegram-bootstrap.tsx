@@ -7,7 +7,6 @@ import { retrieveRawInitData } from "@telegram-apps/sdk";
 import type { TelegramWebApp } from "@/app/types/telegram";
 import { initTelegramSDK } from "@/app/utils/telegram-sdk-init";
 import type { TelegramContextType, TelegramUser } from "./telegram-context";
-import type { TelegramAuthUser } from "@/app/services/api-client.service";
 
 type TelegramWindow = Window & { Telegram?: { WebApp?: TelegramWebApp } };
 
