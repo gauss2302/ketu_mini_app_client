@@ -26,6 +26,9 @@ const LogOutIcon: LucideIcon = LogOut;
 import { useRouter } from "next/navigation";
 import { apiClient, BackendUser } from "@/app/services/api-client.service";
 import { useTelegram } from "@/app/components/providers/telegram-provider";
+import type { TelegramWebApp } from "@/app/types/telegram";
+
+type TelegramWindow = Window & { Telegram?: { WebApp?: TelegramWebApp } };
 
 const ProfilePage = () => {
   const { isReady, user } = useTelegram();
@@ -48,7 +51,7 @@ const ProfilePage = () => {
       // Check if we have initData available (authentication might be in progress)
       const hasInitData = apiClient.hasInitData() || 
                          (typeof window !== "undefined" && 
-                          (window as any).Telegram?.WebApp?.initData);
+                          (window as TelegramWindow).Telegram?.WebApp?.initData);
 
       if (!hasAuth && !hasInitData) {
         setIsLoading(false);

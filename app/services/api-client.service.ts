@@ -1,4 +1,13 @@
-import {User} from "@telegram-apps/sdk-react";
+// Telegram user data from server (matches server response format)
+export interface TelegramAuthUser {
+	id: number;
+	username?: string;
+	first_name: string;
+	last_name?: string;
+	language_code?: string;
+	is_premium: boolean;
+	avatar_url?: string;
+}
 
 export interface BackendUser {
 	id: number;
@@ -108,8 +117,9 @@ class APIClientService {
 		});
 	}
 
-	// Специфичные методы для Telegram Mini App
-	public async validateAuth(initDataOverride?: string): Promise<{ valid: boolean; user: User | null }> {
+	// Telegram Mini App authentication method
+	// Follows tma.js documentation pattern: sends initData in Authorization header
+	public async validateAuth(initDataOverride?: string): Promise<{ valid: boolean; user: TelegramAuthUser | null }> {
 		const initData = initDataOverride || this.initDataRaw;
 		if (!initData) {
 			console.error("No initData available for validation");
@@ -120,28 +130,43 @@ class APIClientService {
 			if (initDataOverride) {
 				this.initDataRaw = initDataOverride;
 			}
-			// Call Express backend auth endpoint
-			const response = await this.post<{ 
-				message: string; 
-				tokens: { accessToken: string; refreshToken: string }; 
-				user: User 
-			}>('/auth/telegram', {
-				initData,
+			
+			// Send initData in Authorization header per tma.js docs: "tma <initData>"
+			// Server also accepts it in body for backwards compatibility
+			const url = `${this.baseUrl}/auth/telegram`;
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: {
+					'Authorization': `tma ${initData}`,
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ initData }), // Also send in body for backwards compatibility
 			});
 
-			if (response.tokens && response.tokens.accessToken) {
-				this.accessToken = response.tokens.accessToken;
+			if (!response.ok) {
+				const errorText = await response.text();
+				throw new Error(`${response.status} ${response.statusText}: ${errorText}`);
+			}
+
+			const responseData = await response.json() as { 
+				message: string; 
+				tokens: { accessToken: string; refreshToken: string }; 
+				user: TelegramAuthUser 
+			};
+
+			if (responseData.tokens && responseData.tokens.accessToken) {
+				this.accessToken = responseData.tokens.accessToken;
 				if (typeof localStorage !== "undefined") {
-					localStorage.setItem(ACCESS_TOKEN_KEY, response.tokens.accessToken);
+					localStorage.setItem(ACCESS_TOKEN_KEY, responseData.tokens.accessToken);
 					// Store refresh token for future use. Note: localStorage can be cleared on
 					// some Telegram WebViews (iOS, Linux Desktop). Prefer Init Data auth in
 					// simple flows; we fall back to initData when no token.
 					// @see https://habr.com/ru/companies/doubletapp/articles/917286/
-					if (response.tokens.refreshToken) {
-						localStorage.setItem("refreshToken", response.tokens.refreshToken);
+					if (responseData.tokens.refreshToken) {
+						localStorage.setItem("refreshToken", responseData.tokens.refreshToken);
 					}
 				}
-				return { valid: true, user: response.user };
+				return { valid: true, user: responseData.user };
 			}
 			
 			return { valid: false, user: null };

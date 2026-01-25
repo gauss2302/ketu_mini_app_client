@@ -7,6 +7,7 @@ import { retrieveRawInitData } from "@telegram-apps/sdk";
 import type { TelegramWebApp } from "@/app/types/telegram";
 import { initTelegramSDK } from "@/app/utils/telegram-sdk-init";
 import type { TelegramContextType, TelegramUser } from "./telegram-context";
+import type { TelegramAuthUser } from "@/app/services/api-client.service";
 
 type TelegramWindow = Window & { Telegram?: { WebApp?: TelegramWebApp } };
 
@@ -121,9 +122,20 @@ export function TelegramBootstrap({
         if (authResponse.valid && authResponse.user) {
           console.log("Authentication successful for user:", authResponse.user.id);
           hasAuthenticatedRef.current = true;
+          
+          // Convert server response format to TelegramUser format for context
+          const telegramUser: TelegramUser = {
+            id: authResponse.user.id,
+            first_name: authResponse.user.first_name,
+            last_name: authResponse.user.last_name,
+            username: authResponse.user.username,
+            language_code: authResponse.user.language_code,
+            is_premium: authResponse.user.is_premium,
+          };
+          
           onUpdate({
             webApp: telegramWebApp,
-            user: authResponse.user as TelegramUser,
+            user: telegramUser,
             initDataRaw: resolvedInitData,
             initData: parseInitData(resolvedInitData),
             tokens: {
