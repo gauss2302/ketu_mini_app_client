@@ -27,6 +27,7 @@ export interface TelegramContextType {
     initDataLength?: number;
     authStatus?: string;
     sdkVersion?: string;
+    authError?: string;
   };
 }
 
