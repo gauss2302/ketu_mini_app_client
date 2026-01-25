@@ -175,9 +175,18 @@ class APIClientService {
 		return this.accessToken;
 	}
 
+	public hasInitData(): boolean {
+		return !!this.initDataRaw;
+	}
+
+	public getInitDataRaw(): string | null {
+		return this.initDataRaw;
+	}
+
 	/** Clear tokens from memory and localStorage (e.g. on logout). */
 	public clearAuth(): void {
 		this.accessToken = null;
+		this.initDataRaw = null;
 		if (typeof localStorage !== "undefined") {
 			localStorage.removeItem(ACCESS_TOKEN_KEY);
 			localStorage.removeItem("refreshToken");

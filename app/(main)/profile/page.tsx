@@ -36,13 +36,38 @@ const ProfilePage = () => {
 
   useEffect(() => {
     const loadProfile = async () => {
-      if (!isReady) return;
+      // Wait for Telegram SDK to be ready
+      if (!isReady) {
+        setIsLoading(true);
+        return;
+      }
+
+      // Check if we have authentication (either user from context or access token)
       const hasAuth = !!user || !!apiClient.getAccessToken();
-      if (!hasAuth) {
+      
+      // Check if we have initData available (authentication might be in progress)
+      const hasInitData = apiClient.hasInitData() || 
+                         (typeof window !== "undefined" && 
+                          (window as any).Telegram?.WebApp?.initData);
+
+      if (!hasAuth && !hasInitData) {
         setIsLoading(false);
         setErrorMessage("Sign in required. Open this app from Telegram.");
         return;
       }
+
+      // If we have initData but no user/token yet, wait a bit for auth to complete
+      if (!hasAuth && hasInitData) {
+        // Give auth a chance to complete (wait up to 1 second)
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const tokenAfterWait = apiClient.getAccessToken();
+        if (!tokenAfterWait) {
+          setIsLoading(false);
+          setErrorMessage("Authentication failed. Please try refreshing the page.");
+          return;
+        }
+      }
+
       setIsLoading(true);
       setErrorMessage(null);
       try {
