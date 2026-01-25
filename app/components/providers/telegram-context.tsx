@@ -22,6 +22,11 @@ export interface TelegramContextType {
   error: string | null;
   /** Whether the app is ready */
   isReady: boolean;
+  /** Theme information from Telegram */
+  theme?: {
+    colorScheme: "light" | "dark";
+    isDark: boolean;
+  };
   /** Debug info for troubleshooting */
   debugInfo?: {
     initDataLength?: number;

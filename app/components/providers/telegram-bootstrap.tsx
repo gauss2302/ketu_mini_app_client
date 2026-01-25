@@ -97,6 +97,10 @@ export function TelegramBootstrap({
           onUpdate({
             error: "Not running in Telegram Web App environment",
             isReady: false,
+            theme: {
+              colorScheme: "light",
+              isDark: false,
+            },
             debugInfo: { ...debugInfo, authStatus: "no_webapp" },
           });
           return;
@@ -151,6 +155,10 @@ export function TelegramBootstrap({
             webApp: telegramWebApp,
             error: "No initData available. Make sure the app is opened from Telegram.",
             isReady: true,
+            theme: {
+              colorScheme: telegramWebApp.colorScheme,
+              isDark: telegramWebApp.colorScheme === "dark",
+            },
             debugInfo: { ...debugInfo, authStatus: "no_init_data", initDataLength: 0 },
           });
           return;
@@ -165,6 +173,10 @@ export function TelegramBootstrap({
             initDataRaw: resolvedInitData,
             error: `Invalid initData: ${validation.reason}`,
             isReady: true,
+            theme: {
+              colorScheme: telegramWebApp.colorScheme,
+              isDark: telegramWebApp.colorScheme === "dark",
+            },
             debugInfo: { 
               ...debugInfo, 
               authStatus: "invalid_format", 
@@ -218,6 +230,10 @@ export function TelegramBootstrap({
               },
               error: null,
               isReady: true,
+              theme: {
+                colorScheme: telegramWebApp.colorScheme,
+                isDark: telegramWebApp.colorScheme === "dark",
+              },
               debugInfo: { ...debugInfo, authStatus: "authenticated" },
             });
           } else {
@@ -236,6 +252,10 @@ export function TelegramBootstrap({
               initData: parsedInitData as InitData | null,
               error: errorMessage,
               isReady: true,
+              theme: {
+                colorScheme: telegramWebApp.colorScheme,
+                isDark: telegramWebApp.colorScheme === "dark",
+              },
               debugInfo: { 
                 ...debugInfo, 
                 authStatus: "auth_failed",
@@ -253,6 +273,10 @@ export function TelegramBootstrap({
             initData: parsedInitData as InitData | null,
             error: `Authentication error: ${errorMsg}`,
             isReady: true,
+            theme: {
+              colorScheme: telegramWebApp.colorScheme,
+              isDark: telegramWebApp.colorScheme === "dark",
+            },
             debugInfo: { 
               ...debugInfo, 
               authStatus: "auth_failed",
@@ -266,9 +290,20 @@ export function TelegramBootstrap({
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Initialization failed";
         console.error("[TG Auth] Bootstrap error:", err);
+        const telegramWebApp =
+          typeof window !== "undefined"
+            ? (window as TelegramWindow).Telegram?.WebApp
+            : null;
         onUpdate({ 
           error: msg, 
           isReady: false,
+          theme: telegramWebApp ? {
+            colorScheme: telegramWebApp.colorScheme,
+            isDark: telegramWebApp.colorScheme === "dark",
+          } : {
+            colorScheme: "light",
+            isDark: false,
+          },
           debugInfo: { ...debugInfo, authStatus: `error: ${msg}` },
         });
       }

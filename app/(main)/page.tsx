@@ -35,40 +35,40 @@ export default function Home() {
   }, [selectedCategory]);
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-white">
+    <div className="fixed inset-0 flex flex-col bg-white dark:bg-gray-900">
       {/* Header - Static */}
-      <header className="flex-none bg-white z-10 border-b px-4 pt-6 pb-3">
+      <header className="flex-none bg-white dark:bg-gray-800 z-10 border-b dark:border-gray-700 px-4 pt-6 pb-3">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <div className="text-sm text-gray-500 mb-1">Explore</div>
-            <h1 className="text-2xl font-bold">Tashkent</h1>
+            <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Explore</div>
+            <h1 className="text-2xl font-bold dark:text-white">Tashkent</h1>
           </div>
           <div className="flex items-center space-x-3">
-            <button className="flex items-center text-sm text-gray-600 space-x-1 bg-gray-50 px-3 py-1.5 rounded-full">
+            <button className="flex items-center text-sm text-gray-600 dark:text-gray-300 space-x-1 bg-gray-50 dark:bg-gray-700 px-3 py-1.5 rounded-full">
               <MapPin className="w-4 h-4 text-[#FF7352]" />
               <span>
                 Tashkent
                 {user && (
-                  <span className="ml-1 text-blue-600">
+                  <span className="ml-1 text-blue-600 dark:text-blue-400">
                     • {user.firstName}
                   </span>
                 )}
               </span>
-              <span className="text-xs text-gray-400">2.5 km</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">2.5 km</span>
             </button>
-            <button className="p-2 hover:bg-gray-100 rounded-full">
-              <Menu className="w-5 h-5 text-gray-600" />
+            <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
+              <Menu className="w-5 h-5 text-gray-600 dark:text-gray-300" />
             </button>
           </div>
         </div>
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
           <input
             type="text"
             placeholder="Search places and bars..."
-            className="w-full bg-gray-50 rounded-2xl py-3 pl-12 pr-4 text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#FF7352]"
+            className="w-full bg-gray-50 dark:bg-gray-700 rounded-2xl py-3 pl-12 pr-4 text-gray-600 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF7352]"
           />
         </div>
 
@@ -81,7 +81,7 @@ export default function Home() {
               className={`${
                 selectedCategory === category.id
                   ? "bg-[#FF7352] text-white"
-                  : "bg-gray-100 text-gray-600"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
               } px-4 py-2 rounded-full whitespace-nowrap font-medium transition-colors`}
             >
               {category.name}
@@ -95,11 +95,11 @@ export default function Home() {
         <div className="py-4">
           {/* User Info Section (если есть данные) */}
           {isReady && user && (
-            <div className="mb-6 p-4 bg-blue-50 rounded-xl">
-              <h3 className="font-semibold text-blue-800 mb-2">
+            <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
+              <h3 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">
                 Welcome, {user.firstName}!
               </h3>
-              <div className="text-sm text-blue-600">
+              <div className="text-sm text-blue-600 dark:text-blue-400">
                 <p>User ID: {user.id}</p>
                 {user.username && <p>Username: @{user.username}</p>}
                 {user.languageCode && <p>Language: {user.languageCode}</p>}
@@ -108,7 +108,7 @@ export default function Home() {
               <h3>
                 <Link
                   href="/test"
-                  className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  className="inline-flex items-center px-4 py-2 bg-blue-500 dark:bg-blue-600 text-white rounded hover:bg-blue-600 dark:hover:bg-blue-700"
                 >
                   Test
                 </Link>
@@ -119,8 +119,8 @@ export default function Home() {
           {/* Popular Section */}
           <div className="mb-8">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Popular</h2>
-              <button className="text-[#FF7352] text-sm font-medium flex items-center">
+              <h2 className="text-lg font-semibold dark:text-white">Popular</h2>
+              <button className="text-[#FF7352] dark:text-[#FF7352] text-sm font-medium flex items-center">
                 See all
                 <ArrowRight className="w-4 h-4 ml-1" />
               </button>
@@ -163,8 +163,8 @@ export default function Home() {
           {/* Trending Places */}
           <div>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Trending Now</h2>
-              <button className="text-[#FF7352] text-sm font-medium flex items-center">
+              <h2 className="text-lg font-semibold dark:text-white">Trending Now</h2>
+              <button className="text-[#FF7352] dark:text-[#FF7352] text-sm font-medium flex items-center">
                 See all
                 <ArrowRight className="w-4 h-4 ml-1" />
               </button>
@@ -174,7 +174,7 @@ export default function Home() {
                 <Link
                   href={`/places/${place.id}`}
                   key={place.id}
-                  className="bg-gray-50 p-4 rounded-xl flex items-center space-x-4"
+                  className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl flex items-center space-x-4"
                 >
                   <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
                     <Image
@@ -186,13 +186,13 @@ export default function Home() {
                     />
                   </div>
                   <div>
-                    <h3 className="font-medium mb-1">{place.name}</h3>
-                    <p className="text-sm text-gray-500">
+                    <h3 className="font-medium mb-1 dark:text-white">{place.name}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       {place.type} • {place.distance}
                     </p>
                     <div className="flex items-center mt-1">
                       <Star className="w-4 h-4 text-[#F3E038] fill-current" />
-                      <span className="text-sm text-gray-600 ml-1">
+                      <span className="text-sm text-gray-600 dark:text-gray-300 ml-1">
                         {place.rating} (
                         {numberFormatter.format(place.reviewCount)} reviews)
                       </span>
@@ -205,9 +205,9 @@ export default function Home() {
 
           {/* Debug Info (только в development) */}
           {process.env.NODE_ENV === "development" && isReady && (
-            <div className="mt-8 p-4 bg-gray-100 rounded-xl">
-              <h3 className="font-semibold mb-2">Debug Info</h3>
-              <div className="text-sm space-y-1">
+            <div className="mt-8 p-4 bg-gray-100 dark:bg-gray-800 rounded-xl">
+              <h3 className="font-semibold mb-2 dark:text-white">Debug Info</h3>
+              <div className="text-sm space-y-1 dark:text-gray-300">
                 <p>
                   <strong>Ready:</strong> {isReady ? "Yes" : "No"}
                 </p>
@@ -218,7 +218,7 @@ export default function Home() {
       </main>
 
       {/* Navigation - Static */}
-      <div className="flex-none border-t bg-white py-2">
+      <div className="flex-none border-t dark:border-gray-700 bg-white dark:bg-gray-800 py-2">
         {/* Bottom Nav Content */}
       </div>
     </div>

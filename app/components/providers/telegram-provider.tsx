@@ -8,6 +8,7 @@ import {
   useTelegram,
   type TelegramContextType,
 } from "./telegram-context";
+import { ThemeProvider } from "./theme-provider";
 
 const TelegramBootstrap = dynamic(
   () =>
@@ -27,8 +28,10 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
 
   return (
     <TelegramContext.Provider value={ctx}>
-      {children}
-      <TelegramBootstrap onUpdate={onUpdate} />
+      <ThemeProvider>
+        {children}
+        <TelegramBootstrap onUpdate={onUpdate} />
+      </ThemeProvider>
     </TelegramContext.Provider>
   );
 }
