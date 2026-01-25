@@ -16,6 +16,16 @@ export interface BackendUser {
 	updated_at: string;
 }
 
+/**
+ * Extended Error type with API error details
+ */
+interface ApiError extends Error {
+	status?: number;
+	code?: string;
+	responseBody?: string;
+	apiError?: boolean;
+}
+
 const ACCESS_TOKEN_KEY = "accessToken";
 const REFRESH_TOKEN_KEY = "refreshToken";
 
@@ -196,10 +206,10 @@ class APIClientService {
 				});
 
 				// Throw error with more details
-				const error = new Error(`Authentication failed: ${errorMessage}`);
-				(error as any).status = response.status;
-				(error as any).code = errorCode;
-				(error as any).responseBody = errorText;
+				const error = new Error(`Authentication failed: ${errorMessage}`) as ApiError;
+				error.status = response.status;
+				error.code = errorCode;
+				error.responseBody = errorText;
 				throw error;
 			}
 
@@ -233,9 +243,10 @@ class APIClientService {
 			return { valid: false, user: null };
 		} catch (error) {
 			const msg = error instanceof Error ? error.message : String(error);
-			const status = (error as any)?.status;
-			const code = (error as any)?.code;
-			const responseBody = (error as any)?.responseBody;
+			const apiError = error as ApiError;
+			const status = apiError?.status;
+			const code = apiError?.code;
+			const responseBody = apiError?.responseBody;
 			
 			console.error("[API] Auth validation failed:", {
 				error: msg,
@@ -248,9 +259,10 @@ class APIClientService {
 			
 			// Re-throw with more context so bootstrap can handle it better
 			if (error instanceof Error) {
-				(error as any).apiError = true;
-				(error as any).status = status;
-				(error as any).code = code;
+				const extendedError = error as ApiError;
+				extendedError.apiError = true;
+				extendedError.status = status;
+				extendedError.code = code;
 			}
 			
 			return { valid: false, user: null };

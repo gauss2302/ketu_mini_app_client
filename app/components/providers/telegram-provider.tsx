@@ -14,7 +14,7 @@ const TelegramBootstrap = dynamic(
     import("./telegram-bootstrap").then((m) => ({
       default: m.TelegramBootstrap,
     })),
-  { ssr: false }
+  { ssr: false },
 );
 
 /** SSR-safe: holds context state; Bootstrap (client-only) runs SDK init and updates it. */
