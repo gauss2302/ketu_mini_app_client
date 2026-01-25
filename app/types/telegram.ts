@@ -64,6 +64,12 @@ export interface TelegramWebAppRaw {
   ready: () => void;
   expand: () => void;
   close: () => void;
+  // Bot API 6.1+ methods
+  setHeaderColor: (color: string) => void;
+  setBackgroundColor: (color: string) => void;
+  // Bot API 6.2+ methods
+  enableClosingConfirmation: () => void;
+  disableClosingConfirmation: () => void;
 }
 
 /**
