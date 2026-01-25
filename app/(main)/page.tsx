@@ -50,7 +50,7 @@ export default function Home() {
                 Tashkent
                 {user && (
                   <span className="ml-1 text-blue-600">
-                    • {user.first_name}
+                    • {user.firstName}
                   </span>
                 )}
               </span>
@@ -97,12 +97,12 @@ export default function Home() {
           {isReady && user && (
             <div className="mb-6 p-4 bg-blue-50 rounded-xl">
               <h3 className="font-semibold text-blue-800 mb-2">
-                Welcome, {user.first_name}!
+                Welcome, {user.firstName}!
               </h3>
               <div className="text-sm text-blue-600">
                 <p>User ID: {user.id}</p>
                 {user.username && <p>Username: @{user.username}</p>}
-                {user.language_code && <p>Language: {user.language_code}</p>}
+                {user.languageCode && <p>Language: {user.languageCode}</p>}
                 {/* <p>User Agent: {user.auth}</p> */}
               </div>
               <h3>

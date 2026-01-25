@@ -11,15 +11,15 @@ export const Header = () => {
         {/* Top bar with user info */}
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            {user?.first_name && (
+            {user?.firstName && (
               <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center uppercase font-medium">
-                {user.first_name[0]}
+                {user.firstName[0]}
               </div>
             )}
             <div>
               <p className="font-medium">
                 {user
-                  ? `${user.first_name} ${user.last_name || ""}`
+                  ? `${user.firstName} ${user.lastName || ""}`
                   : "Telegram User"}
               </p>
               {user?.username && (
