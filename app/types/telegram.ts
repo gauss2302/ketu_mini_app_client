@@ -1,100 +1,120 @@
-export interface TelegramWebApp {
-	initData: string;
-	initDataUnsafe: {
-		query_id: string;
-		user: {
-			id: number;
-			first_name: string;
-			last_name?: string;
-			picture_url?: string;
-			username?: string;
-			language_code?: string;
-			is_premium?: boolean;
-		};
-		auth_date: number;
-		hash: string;
-	};
-	version: string;
-	platform: string;
-	colorScheme: string;
-	themeParams: {
-		bg_color: string;
-		text_color: string;
-		hint_color: string;
-		link_color: string;
-		button_color: string;
-		button_text_color: string;
-		secondary_bg_color: string;
-	};
-	isExpanded: boolean;
-	viewportHeight: number;
-	viewportStableHeight: number;
-	headerColor: string;
-	backgroundColor: string;
-	isClosingConfirmationEnabled: boolean;
-	BackButton: {
-		isVisible: boolean;
-		onClick: (callback: () => void) => void;
-		offClick: (callback: () => void) => void;
-		show: () => void;
-		hide: () => void;
-	};
-	MainButton: {
-		text: string;
-		color: string;
-		textColor: string;
-		isVisible: boolean;
-		isActive: boolean;
-		isProgressVisible: boolean;
-		setText: (text: string) => void;
-		onClick: (callback: () => void) => void;
-		offClick: (callback: () => void) => void;
-		show: () => void;
-		hide: () => void;
-		enable: () => void;
-		disable: () => void;
-		showProgress: (leaveActive: boolean) => void;
-		hideProgress: () => void;
-		setParams: (params: {
-			text?: string;
-			color?: string;
-			text_color?: string;
-			is_active?: boolean;
-			is_visible?: boolean;
-		}) => void;
-	};
-	HapticFeedback: {
-		impactOccurred: (style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft') => void;
-		notificationOccurred: (type: 'error' | 'success' | 'warning') => void;
-		selectionChanged: () => void;
-	};
-	close: () => void;
-	init: () => void;
-	expand: () => void;
-	enableClosingConfirmation: () => void;
-	disableClosingConfirmation: () => void;
-	setHeaderColor: (color: string) => void;
-	setBackgroundColor: (color: string) => void;
-	ready: () => void;
-	sendData: (data: string) => void;
-	openLink: (url: string, options?: { try_instant_view?: boolean }) => void;
-	openTelegramLink: (url: string) => void;
-	showPopup: (params: {
-		title?: string;
-		message: string;
-		buttons?: Array<{
-			id: string;
-			type?: 'default' | 'ok' | 'close' | 'cancel' | 'destructive';
-			text: string;
-		}>;
-	}, callback?: (buttonId: string) => void) => void;
-	showAlert: (message: string, callback?: () => void) => void;
-	showConfirm: (message: string, callback?: (isConfirmed: boolean) => void) => void;
-	showScanQRPopup: (params: {
-		text?: string;
-	}, callback?: (text: string) => void) => void;
-	closeScanQRPopup: () => void;
-	readTextFromClipboard: (callback?: (text: string) => void) => void;
-	requestWriteAccess: (callback?: (isGranted: boolean) => void) => void;
-	requestContact: (callback?: (isGranted: boolean) => void) => void;
+/**
+ * Re-export official types from @telegram-apps/sdk-react
+ * These types are the source of truth for Telegram Mini App development
+ */
+
+// Re-export official types from the SDK
+export type {
+  InitData,
+  LaunchParams,
+  Chat,
+  ThemeParams,
+} from "@telegram-apps/sdk-react";
+
+/**
+ * User type for our application
+ * Uses camelCase to match SDK conventions
+ */
+export interface User {
+  id: number;
+  firstName: string;
+  lastName?: string;
+  username?: string;
+  languageCode?: string;
+  isPremium?: boolean;
+  photoUrl?: string;
+  allowsWriteToPm?: boolean;
 }
+
+/**
+ * Extended window type for accessing Telegram WebApp from global scope
+ * This is the raw window.Telegram.WebApp object before SDK initialization
+ */
+export interface TelegramWebAppRaw {
+  initData: string;
+  initDataUnsafe: {
+    query_id?: string;
+    user?: {
+      id: number;
+      first_name: string;
+      last_name?: string;
+      username?: string;
+      language_code?: string;
+      is_premium?: boolean;
+      photo_url?: string;
+    };
+    auth_date?: number;
+    hash?: string;
+  };
+  version: string;
+  platform: string;
+  colorScheme: "light" | "dark";
+  themeParams: {
+    bg_color?: string;
+    text_color?: string;
+    hint_color?: string;
+    link_color?: string;
+    button_color?: string;
+    button_text_color?: string;
+    secondary_bg_color?: string;
+  };
+  isExpanded: boolean;
+  viewportHeight: number;
+  viewportStableHeight: number;
+  ready: () => void;
+  expand: () => void;
+  close: () => void;
+}
+
+/**
+ * Window type augmentation for Telegram WebApp
+ */
+export type TelegramWindow = Window & {
+  Telegram?: {
+    WebApp?: TelegramWebAppRaw;
+  };
+};
+
+/**
+ * Server response user type (snake_case format from backend)
+ * This matches the format returned by our Express server
+ */
+export interface ServerUser {
+  id: number;
+  username?: string;
+  first_name: string;
+  last_name?: string;
+  language_code?: string;
+  is_premium: boolean;
+  avatar_url?: string;
+}
+
+/**
+ * Auth response from server
+ */
+export interface AuthResponse {
+  message: string;
+  tokens: {
+    accessToken: string;
+    refreshToken: string;
+  };
+  user: ServerUser;
+}
+
+/**
+ * Convert ServerUser (snake_case) to User format (camelCase)
+ */
+export function serverUserToUser(serverUser: ServerUser): User {
+  return {
+    id: serverUser.id,
+    username: serverUser.username,
+    firstName: serverUser.first_name,
+    lastName: serverUser.last_name,
+    languageCode: serverUser.language_code,
+    isPremium: serverUser.is_premium,
+    photoUrl: serverUser.avatar_url,
+  };
+}
+
+// Legacy export for backwards compatibility
+export type TelegramWebApp = TelegramWebAppRaw;

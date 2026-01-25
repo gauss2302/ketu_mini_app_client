@@ -4,13 +4,44 @@ import { useEffect, useRef } from "react";
 import { apiClient } from "@/app/services/api-client.service";
 import { useRawInitData } from "@telegram-apps/sdk-react";
 import { retrieveRawInitData } from "@telegram-apps/sdk";
-import type { TelegramWebApp } from "@/app/types/telegram";
+import type { TelegramWindow, InitData } from "@/app/types/telegram";
+import { serverUserToUser } from "@/app/types/telegram";
 import { initTelegramSDK } from "@/app/utils/telegram-sdk-init";
-import type { TelegramContextType, TelegramUser } from "./telegram-context";
+import type { TelegramContextType } from "./telegram-context";
 
-type TelegramWindow = Window & { Telegram?: { WebApp?: TelegramWebApp } };
+/**
+ * Validates initData format - should be a URL-encoded query string
+ */
+function validateInitDataFormat(initData: string): { valid: boolean; reason?: string } {
+  if (!initData || initData.length === 0) {
+    return { valid: false, reason: "initData is empty" };
+  }
 
-function parseInitData(initDataRaw: string): Record<string, unknown> | null {
+  // initData should be URL-encoded query string format
+  // e.g., "query_id=AAH...&user=%7B%22id%22%3A...&auth_date=...&hash=..."
+  if (!initData.includes("=") || !initData.includes("&")) {
+    // Might be a short initData or invalid format
+    if (initData.length < 50) {
+      return { valid: false, reason: "initData too short, likely invalid" };
+    }
+  }
+
+  // Check for required fields
+  if (!initData.includes("hash=")) {
+    return { valid: false, reason: "initData missing hash field" };
+  }
+
+  if (!initData.includes("auth_date=")) {
+    return { valid: false, reason: "initData missing auth_date field" };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Parse initData from URL-encoded query string format
+ */
+function parseInitDataRaw(initDataRaw: string): Record<string, unknown> | null {
   try {
     const trimmed = initDataRaw.trim();
     if (trimmed.startsWith("{")) {
@@ -27,7 +58,7 @@ function parseInitData(initDataRaw: string): Record<string, unknown> | null {
     }
     return decoded;
   } catch (err) {
-    console.error("Error parsing init data:", err);
+    console.error("[TG Auth] Error parsing init data:", err);
     return null;
   }
 }
@@ -38,8 +69,9 @@ export function TelegramBootstrap({
 }: {
   onUpdate: (ctx: Partial<TelegramContextType>) => void;
 }) {
-  // useRawInitData hook from @telegram-apps/sdk-react - returns raw initData string
+  // Official hook from @telegram-apps/sdk-react
   const sdkRawInitData = useRawInitData();
+
   const hasInitializedRef = useRef(false);
   const hasAuthenticatedRef = useRef(false);
   const initDataRef = useRef<string | null>(null);
@@ -51,6 +83,10 @@ export function TelegramBootstrap({
         return;
       }
 
+      const debugInfo: TelegramContextType["debugInfo"] = {
+        authStatus: "starting",
+      };
+
       try {
         const telegramWebApp =
           typeof window !== "undefined"
@@ -61,107 +97,147 @@ export function TelegramBootstrap({
           onUpdate({
             error: "Not running in Telegram Web App environment",
             isReady: false,
+            debugInfo: { ...debugInfo, authStatus: "no_webapp" },
           });
           return;
         }
 
+        debugInfo.sdkVersion = telegramWebApp.version;
+
         // Initialize SDK if not already done
         if (!hasInitializedRef.current) {
-          console.log("Initializing Telegram SDK...");
-          await initTelegramSDK();
-          hasInitializedRef.current = true;
-          console.log("Telegram SDK initialized");
+          console.log("[TG Auth] Initializing Telegram SDK...");
+          try {
+            await initTelegramSDK();
+            hasInitializedRef.current = true;
+            console.log("[TG Auth] SDK initialized successfully");
+          } catch (initError) {
+            console.error("[TG Auth] SDK init failed:", initError);
+            // Continue anyway - we can still try to get initData from window
+          }
         }
 
         // Try multiple methods to get initData in order of preference:
-        // 1. useRawInitData() hook (reactive, preferred method)
+        // 1. useRawInitData() hook (reactive, preferred method from SDK)
         // 2. retrieveRawInitData() directly from SDK (after init)
         // 3. window.Telegram.WebApp.initData (fallback)
         let resolvedInitData: string | null | undefined = sdkRawInitData || initDataRef.current;
+        let initDataSource = "cached";
         
         if (!resolvedInitData) {
           try {
             resolvedInitData = retrieveRawInitData();
-            console.log("Got initData from retrieveRawInitData()");
+            initDataSource = "retrieveRawInitData()";
+            console.log("[TG Auth] Got initData from retrieveRawInitData()");
           } catch (e) {
-            console.warn("retrieveRawInitData() failed:", e);
+            console.warn("[TG Auth] retrieveRawInitData() failed:", e);
           }
         } else if (sdkRawInitData) {
-          console.log("Got initData from useRawInitData() hook");
+          initDataSource = "useRawInitData() hook";
+          console.log("[TG Auth] Got initData from useRawInitData() hook");
         }
 
         if (!resolvedInitData) {
           resolvedInitData = telegramWebApp.initData;
           if (resolvedInitData) {
-            console.log("Got initData from window.Telegram.WebApp.initData");
+            initDataSource = "window.Telegram.WebApp.initData";
+            console.log("[TG Auth] Got initData from window.Telegram.WebApp.initData");
           }
         }
 
         if (!resolvedInitData) {
-          console.warn("No initData available from any source. Waiting for initData...");
-          // Store current hook value for next render
-          if (sdkRawInitData) {
-            initDataRef.current = sdkRawInitData;
-          }
-          // Don't set error yet - might be loading, hook might update
+          console.warn("[TG Auth] No initData available from any source");
+          onUpdate({
+            webApp: telegramWebApp,
+            error: "No initData available. Make sure the app is opened from Telegram.",
+            isReady: true,
+            debugInfo: { ...debugInfo, authStatus: "no_init_data", initDataLength: 0 },
+          });
+          return;
+        }
+
+        // Validate initData format
+        const validation = validateInitDataFormat(resolvedInitData);
+        if (!validation.valid) {
+          console.error("[TG Auth] Invalid initData format:", validation.reason);
+          onUpdate({
+            webApp: telegramWebApp,
+            initDataRaw: resolvedInitData,
+            error: `Invalid initData: ${validation.reason}`,
+            isReady: true,
+            debugInfo: { 
+              ...debugInfo, 
+              authStatus: "invalid_format", 
+              initDataLength: resolvedInitData.length 
+            },
+          });
           return;
         }
 
         // Store for future use
         initDataRef.current = resolvedInitData;
-        console.log("Retrieved initData, length:", resolvedInitData.length, "first 50 chars:", resolvedInitData.substring(0, 50));
+        debugInfo.initDataLength = resolvedInitData.length;
+        
+        console.log("[TG Auth] initData validated", {
+          source: initDataSource,
+          length: resolvedInitData.length,
+          preview: resolvedInitData.substring(0, 50) + "...",
+        });
 
+        // Parse initData for context
+        const parsedInitData = parseInitDataRaw(resolvedInitData);
+        
         // Set initData in API client
         apiClient.setInitDataRaw(resolvedInitData);
         
         // Authenticate with backend
-        console.log("Authenticating with backend...");
+        console.log("[TG Auth] Authenticating with backend...");
+        debugInfo.authStatus = "authenticating";
+        
         const authResponse = await apiClient.validateAuth(resolvedInitData);
 
         if (authResponse.valid && authResponse.user) {
-          console.log("Authentication successful for user:", authResponse.user.id);
+          console.log("[TG Auth] Authentication successful for user:", authResponse.user.id);
           hasAuthenticatedRef.current = true;
           
-          // Convert server response format to TelegramUser format for context
-          const telegramUser: TelegramUser = {
-            id: authResponse.user.id,
-            first_name: authResponse.user.first_name,
-            last_name: authResponse.user.last_name,
-            username: authResponse.user.username,
-            language_code: authResponse.user.language_code,
-            is_premium: authResponse.user.is_premium,
-          };
+          // Convert server response (snake_case) to User format (camelCase)
+          const user = serverUserToUser(authResponse.user);
           
           onUpdate({
             webApp: telegramWebApp,
-            user: telegramUser,
+            user: user,
             initDataRaw: resolvedInitData,
-            initData: parseInitData(resolvedInitData),
+            initData: parsedInitData as InitData | null,
             tokens: {
               accessToken: apiClient.getAccessToken() || "",
               refreshToken: localStorage.getItem("refreshToken") || "",
             },
             error: null,
             isReady: true,
+            debugInfo: { ...debugInfo, authStatus: "authenticated" },
           });
         } else {
-          console.error("Authentication failed:", authResponse);
+          console.error("[TG Auth] Authentication failed:", authResponse);
           onUpdate({
             webApp: telegramWebApp,
             initDataRaw: resolvedInitData,
-            initData: parseInitData(resolvedInitData),
-            error: "Authentication failed. Please check backend connection.",
+            initData: parsedInitData as InitData | null,
+            error: "Authentication failed. Please try refreshing the page.",
             isReady: true,
+            debugInfo: { ...debugInfo, authStatus: "auth_failed" },
           });
         }
 
         // Notify Telegram that the app is ready
         telegramWebApp.ready();
       } catch (err) {
-        const msg =
-          err instanceof Error ? err.message : "Initialization failed";
-        console.error("TelegramBootstrap error:", err);
-        onUpdate({ error: msg, isReady: false });
+        const msg = err instanceof Error ? err.message : "Initialization failed";
+        console.error("[TG Auth] Bootstrap error:", err);
+        onUpdate({ 
+          error: msg, 
+          isReady: false,
+          debugInfo: { ...debugInfo, authStatus: `error: ${msg}` },
+        });
       }
     };
 

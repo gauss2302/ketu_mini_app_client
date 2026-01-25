@@ -1,5 +1,6 @@
 import Script from "next/script";
 import { TelegramProvider } from "@/app/components/providers/telegram-provider";
+import { DebugPanel } from "@/app/components/debug-panel";
 import "./globals.css";
 import React from "react";
 
@@ -17,7 +18,11 @@ export default function RootLayout({
         />
       </head>
       <body suppressHydrationWarning>
-        <TelegramProvider>{children}</TelegramProvider>
+        <TelegramProvider>
+          {children}
+          {/* Debug panel for troubleshooting authentication issues */}
+          <DebugPanel />
+        </TelegramProvider>
       </body>
     </html>
   );

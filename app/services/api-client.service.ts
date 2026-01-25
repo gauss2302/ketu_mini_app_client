@@ -1,14 +1,8 @@
-// Telegram user data from server (matches server response format)
-export interface TelegramAuthUser {
-	id: number;
-	username?: string;
-	first_name: string;
-	last_name?: string;
-	language_code?: string;
-	is_premium: boolean;
-	avatar_url?: string;
-}
+import type { ServerUser, AuthResponse } from "@/app/types/telegram";
 
+/**
+ * Backend user type with additional database fields
+ */
 export interface BackendUser {
 	id: number;
 	username?: string;
@@ -23,7 +17,12 @@ export interface BackendUser {
 }
 
 const ACCESS_TOKEN_KEY = "accessToken";
+const REFRESH_TOKEN_KEY = "refreshToken";
 
+/**
+ * API Client for communicating with ketu_server backend
+ * Handles Telegram Mini App authentication and API requests
+ */
 class APIClientService {
 	private static instance: APIClientService;
 	private readonly baseUrl: string;
@@ -31,22 +30,25 @@ class APIClientService {
 	private initDataRaw: string | null = null;
 
 	private constructor(baseUrl?: string) {
-		// Use environment variable for backend URL (ketu_server). Fallback /api hits Next.js only;
-		// auth/profile must go to backend for Postgres + JWT.
+		// Use environment variable for backend URL (ketu_server)
 		this.baseUrl = baseUrl || process.env.NEXT_PUBLIC_API_URL || "/api";
-		if (typeof window !== "undefined" && this.baseUrl === "/api") {
-			console.warn(
-				"[API] NEXT_PUBLIC_API_URL is unset; using /api. Set it to your ketu_server URL (e.g. http://localhost:18080) so auth and /user/profile reach the backend."
-			);
-		}
+		
 		if (typeof window !== "undefined") {
+			if (this.baseUrl === "/api") {
+				console.warn(
+					"[API] NEXT_PUBLIC_API_URL is unset; using /api. Set it to your ketu_server URL (e.g. http://localhost:18080)"
+				);
+			}
+			// Restore token from localStorage
 			const stored = localStorage.getItem(ACCESS_TOKEN_KEY);
-			if (stored) this.accessToken = stored;
+			if (stored) {
+				this.accessToken = stored;
+			}
 		}
 	}
 
 	public static getInstance(baseURL?: string): APIClientService {
-		if(!APIClientService.instance) {
+		if (!APIClientService.instance) {
 			APIClientService.instance = new APIClientService(baseURL);
 		}
 		return APIClientService.instance;
@@ -60,18 +62,15 @@ class APIClientService {
 			};
 		}
 
-		if(!this.initDataRaw) {
-			// If we don't have a token AND we don't have initData, we can't authenticate.
-			// However, for the initial validateAuth call, we might not need headers if we send initData in body.
-			// But for other requests, we need auth.
+		if (!this.initDataRaw) {
 			throw new Error("No Auth Token or TG Auth Data available");
 		}
 
-		// Fallback to sending initData directly if no token yet (though backend expects token for other endpoints usually)
+		// Fallback to sending initData directly per tma.js docs: "tma <initData>"
 		return {
 			'Authorization': `tma ${this.initDataRaw}`,
 			'Content-Type': 'application/json',
-		}
+		};
 	}
 
 	private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -88,26 +87,26 @@ class APIClientService {
 				headers,
 			});
 
-			if(!response.ok) {
-				throw new Error(`${response.status} ${response.statusText}`);
+			if (!response.ok) {
+				const errorText = await response.text();
+				throw new Error(`${response.status} ${response.statusText}: ${errorText}`);
 			}
 
 			const contentType = response.headers.get('content-type');
-			if(contentType && contentType.includes('application/json')) {
+			if (contentType && contentType.includes('application/json')) {
 				return response.json() as Promise<T>;
 			}
 
 			const textResponse = await response.text();
 			return textResponse as T;
 		} catch (error) {
-			console.error(`API request failed: ${endpoint}`, error);
+			console.error(`[API] Request failed: ${endpoint}`, error);
 			throw error;
-
 		}
 	}
 
 	public async get<T>(endpoint: string): Promise<T> {
-		return this.request(endpoint, {method: 'GET'});
+		return this.request(endpoint, { method: 'GET' });
 	}
 
 	public async post<T>(endpoint: string, data?: unknown): Promise<T> {
@@ -117,12 +116,18 @@ class APIClientService {
 		});
 	}
 
-	// Telegram Mini App authentication method
-	// Follows tma.js documentation pattern: sends initData in Authorization header
-	public async validateAuth(initDataOverride?: string): Promise<{ valid: boolean; user: TelegramAuthUser | null }> {
+	/**
+	 * Authenticate with backend using Telegram initData
+	 * Follows tma.js documentation pattern: sends initData in Authorization header
+	 * 
+	 * @param initDataOverride - Optional initData to use instead of stored value
+	 * @returns Authentication result with ServerUser (snake_case format from backend)
+	 */
+	public async validateAuth(initDataOverride?: string): Promise<{ valid: boolean; user: ServerUser | null }> {
 		const initData = initDataOverride || this.initDataRaw;
+		
 		if (!initData) {
-			console.error("No initData available for validation");
+			console.error("[API] No initData available for validation");
 			return { valid: false, user: null };
 		}
 
@@ -131,8 +136,13 @@ class APIClientService {
 				this.initDataRaw = initDataOverride;
 			}
 			
+			console.log("[API] Authenticating with backend...", {
+				url: `${this.baseUrl}/auth/telegram`,
+				initDataLength: initData.length,
+			});
+
 			// Send initData in Authorization header per tma.js docs: "tma <initData>"
-			// Server also accepts it in body for backwards compatibility
+			// Also send in body for backwards compatibility
 			const url = `${this.baseUrl}/auth/telegram`;
 			const response = await fetch(url, {
 				method: 'POST',
@@ -140,43 +150,83 @@ class APIClientService {
 					'Authorization': `tma ${initData}`,
 					'Content-Type': 'application/json',
 				},
-				body: JSON.stringify({ initData }), // Also send in body for backwards compatibility
+				body: JSON.stringify({ initData }),
 			});
 
 			if (!response.ok) {
 				const errorText = await response.text();
+				console.error("[API] Auth request failed:", {
+					status: response.status,
+					statusText: response.statusText,
+					body: errorText,
+				});
 				throw new Error(`${response.status} ${response.statusText}: ${errorText}`);
 			}
 
-			const responseData = await response.json() as { 
-				message: string; 
-				tokens: { accessToken: string; refreshToken: string }; 
-				user: TelegramAuthUser 
-			};
+			const responseData = await response.json() as AuthResponse;
+			console.log("[API] Auth response received:", {
+				hasTokens: !!responseData.tokens,
+				hasUser: !!responseData.user,
+				userId: responseData.user?.id,
+			});
 
 			if (responseData.tokens && responseData.tokens.accessToken) {
 				this.accessToken = responseData.tokens.accessToken;
+				
 				if (typeof localStorage !== "undefined") {
 					localStorage.setItem(ACCESS_TOKEN_KEY, responseData.tokens.accessToken);
-					// Store refresh token for future use. Note: localStorage can be cleared on
-					// some Telegram WebViews (iOS, Linux Desktop). Prefer Init Data auth in
-					// simple flows; we fall back to initData when no token.
-					// @see https://habr.com/ru/companies/doubletapp/articles/917286/
 					if (responseData.tokens.refreshToken) {
-						localStorage.setItem("refreshToken", responseData.tokens.refreshToken);
+						localStorage.setItem(REFRESH_TOKEN_KEY, responseData.tokens.refreshToken);
 					}
 				}
+				
 				return { valid: true, user: responseData.user };
 			}
 			
 			return { valid: false, user: null };
 		} catch (error) {
 			const msg = error instanceof Error ? error.message : String(error);
-			console.error("Auth validation failed", {
+			console.error("[API] Auth validation failed:", {
 				error: msg,
-				hint: "Check browser console + backend logs. Ensure NEXT_PUBLIC_API_URL is reachable from Telegram WebView, BOT_TOKEN matches mini app bot, and you're opening the app inside Telegram (not in a regular browser).",
+				hint: "Check: NEXT_PUBLIC_API_URL is reachable, BOT_TOKEN matches mini app bot, app opened from Telegram",
 			});
 			return { valid: false, user: null };
+		}
+	}
+
+	/**
+	 * Refresh access token using refresh token
+	 */
+	public async refreshToken(): Promise<boolean> {
+		const refreshToken = typeof localStorage !== "undefined" 
+			? localStorage.getItem(REFRESH_TOKEN_KEY) 
+			: null;
+			
+		if (!refreshToken) {
+			return false;
+		}
+
+		try {
+			const response = await fetch(`${this.baseUrl}/auth/refresh`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ refreshToken }),
+			});
+
+			if (!response.ok) {
+				return false;
+			}
+
+			const data = await response.json() as { accessToken: string };
+			if (data.accessToken) {
+				this.accessToken = data.accessToken;
+				localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
+				return true;
+			}
+			
+			return false;
+		} catch {
+			return false;
 		}
 	}
 
@@ -208,13 +258,13 @@ class APIClientService {
 		return this.initDataRaw;
 	}
 
-	/** Clear tokens from memory and localStorage (e.g. on logout). */
+	/** Clear tokens from memory and localStorage */
 	public clearAuth(): void {
 		this.accessToken = null;
 		this.initDataRaw = null;
 		if (typeof localStorage !== "undefined") {
 			localStorage.removeItem(ACCESS_TOKEN_KEY);
-			localStorage.removeItem("refreshToken");
+			localStorage.removeItem(REFRESH_TOKEN_KEY);
 		}
 	}
 }
