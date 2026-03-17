@@ -3,24 +3,220 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+  --app-bg: #f7efe5;
+  --app-bg-wash: rgba(255, 204, 162, 0.28);
+  --app-bg-glow: rgba(255, 115, 82, 0.18);
+  --app-surface: #fffaf4;
+  --app-surface-elevated: rgba(255, 255, 255, 0.94);
+  --app-surface-soft: rgba(255, 255, 255, 0.72);
+  --app-panel-highlight: rgba(255, 255, 255, 0.62);
+  --app-card-highlight: rgba(255, 255, 255, 0.72);
+  --app-border: rgba(112, 79, 48, 0.12);
+  --app-border-strong: rgba(112, 79, 48, 0.18);
+  --app-text: #24170d;
+  --app-muted: #786553;
+  --app-accent: #ff7352;
+  --app-accent-strong: #e85f3a;
+  --app-accent-soft: rgba(255, 115, 82, 0.12);
+  --app-chip: #f3e6d7;
+  --app-info-soft: rgba(59, 130, 246, 0.1);
+  --app-info-border: rgba(59, 130, 246, 0.14);
+  --app-info-text: #1d4ed8;
+  --app-danger-soft: rgba(220, 38, 38, 0.08);
+  --app-danger-border: rgba(220, 38, 38, 0.14);
+  --app-danger-text: #b91c1c;
+  --app-success-soft: rgba(34, 197, 94, 0.1);
+  --app-success-border: rgba(34, 197, 94, 0.14);
+  --app-success-text: #15803d;
+  --app-overlay: rgba(18, 15, 11, 0.56);
+  --app-shadow: 0 18px 44px rgba(76, 47, 21, 0.08);
+  --theme-bg: var(--app-bg);
+  --theme-text: var(--app-text);
 }
 
-.dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+html.dark {
+  color-scheme: dark;
+  --app-bg: #0e141b;
+  --app-bg-wash: rgba(98, 145, 187, 0.2);
+  --app-bg-glow: rgba(255, 123, 89, 0.15);
+  --app-surface: #151d24;
+  --app-surface-elevated: rgba(28, 37, 47, 0.9);
+  --app-surface-soft: rgba(27, 36, 46, 0.72);
+  --app-panel-highlight: rgba(255, 255, 255, 0.05);
+  --app-card-highlight: rgba(255, 255, 255, 0.04);
+  --app-border: rgba(155, 173, 191, 0.14);
+  --app-border-strong: rgba(155, 173, 191, 0.22);
+  --app-text: #eff4f7;
+  --app-muted: #9aa9b5;
+  --app-accent: #ff9a72;
+  --app-accent-strong: #ff7c57;
+  --app-accent-soft: rgba(255, 124, 87, 0.14);
+  --app-chip: #202a33;
+  --app-info-soft: rgba(96, 165, 250, 0.14);
+  --app-info-border: rgba(96, 165, 250, 0.18);
+  --app-info-text: #93c5fd;
+  --app-danger-soft: rgba(248, 113, 113, 0.12);
+  --app-danger-border: rgba(248, 113, 113, 0.16);
+  --app-danger-text: #fda4af;
+  --app-success-soft: rgba(74, 222, 128, 0.12);
+  --app-success-border: rgba(74, 222, 128, 0.16);
+  --app-success-text: #86efac;
+  --app-overlay: rgba(6, 9, 12, 0.72);
+  --app-shadow: 0 18px 44px rgba(0, 0, 0, 0.35);
+  --theme-bg: var(--app-bg);
+  --theme-text: var(--app-text);
 }
 
-/* Telegram theme variables - these are set by Telegram SDK */
+html[data-theme-mode="telegram"] {
+  --theme-bg: var(--tg-theme-bg-color, var(--app-bg));
+  --theme-text: var(--tg-theme-text-color, var(--app-text));
+}
+
+html,
 body {
-  color: var(--tg-theme-text-color, var(--foreground));
-  background: var(--tg-theme-bg-color, var(--background));
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100%;
 }
 
-/* Dark mode overrides */
-.dark body {
-  color: var(--tg-theme-text-color, var(--foreground));
-  background: var(--tg-theme-bg-color, var(--background));
+body {
+  color: var(--theme-text);
+  background:
+    radial-gradient(circle at top, var(--app-bg-wash), transparent 36%),
+    radial-gradient(circle at bottom right, var(--app-bg-glow), transparent 28%),
+    var(--theme-bg);
+  font-family: "Trebuchet MS", "Avenir Next", "Segoe UI", sans-serif;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+* {
+  border-color: var(--app-border);
+}
+
+button,
+input,
+textarea,
+select {
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease,
+    opacity 180ms ease;
+}
+
+::selection {
+  background: rgba(255, 115, 82, 0.28);
+}
+
+@layer components {
+  .theme-shell {
+    background: var(--theme-bg);
+    color: var(--theme-text);
+  }
+
+  .theme-panel {
+    background:
+      linear-gradient(180deg, var(--app-panel-highlight), transparent 52%),
+      var(--app-surface);
+    border: 1px solid var(--app-border-strong);
+    box-shadow: var(--app-shadow);
+    backdrop-filter: blur(18px);
+  }
+
+  .theme-card {
+    background:
+      linear-gradient(180deg, var(--app-card-highlight), transparent 48%),
+      var(--app-surface-elevated);
+    border: 1px solid var(--app-border);
+    box-shadow: var(--app-shadow);
+    backdrop-filter: blur(20px);
+  }
+
+  .theme-soft-card {
+    background: var(--app-surface-soft);
+    border: 1px solid var(--app-border);
+    box-shadow: var(--app-shadow);
+    backdrop-filter: blur(16px);
+  }
+
+  .theme-divider {
+    border-color: var(--app-border);
+  }
+
+  .theme-muted {
+    color: var(--app-muted);
+  }
+
+  .theme-chip {
+    background: var(--app-chip);
+    color: var(--app-muted);
+    border: 1px solid var(--app-border);
+    backdrop-filter: blur(10px);
+  }
+
+  .theme-icon-bubble {
+    background:
+      linear-gradient(145deg, var(--app-accent-soft), transparent 58%),
+      var(--app-chip);
+    color: var(--app-accent);
+    border: 1px solid var(--app-border);
+  }
+
+  .theme-input {
+    background:
+      linear-gradient(180deg, var(--app-panel-highlight), transparent 52%),
+      var(--app-surface-soft);
+    color: var(--theme-text);
+    border: 1px solid var(--app-border);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  }
+
+  .theme-input::placeholder {
+    color: var(--app-muted);
+  }
+
+  .theme-input:focus {
+    outline: none;
+    border-color: color-mix(in srgb, var(--app-accent) 65%, var(--app-border));
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--app-accent-soft) 80%, transparent);
+  }
+
+  .theme-accent-pill {
+    background: var(--app-accent);
+    color: #fff;
+    border: 1px solid transparent;
+    box-shadow: 0 12px 24px rgba(255, 115, 82, 0.18);
+  }
+
+  .theme-info-card {
+    background: var(--app-info-soft);
+    color: var(--app-info-text);
+    border: 1px solid var(--app-info-border);
+  }
+
+  .theme-danger-card {
+    background: var(--app-danger-soft);
+    color: var(--app-danger-text);
+    border: 1px solid var(--app-danger-border);
+  }
+
+  .theme-success-card {
+    background: var(--app-success-soft);
+    color: var(--app-success-text);
+    border: 1px solid var(--app-success-border);
+  }
+
+  .theme-overlay-button {
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    backdrop-filter: blur(12px);
+  }
+
+  .theme-overlay-button:hover {
+    background: rgba(255, 255, 255, 0.28);
+  }
 }

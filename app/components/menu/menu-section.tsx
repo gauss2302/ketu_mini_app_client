@@ -1,5 +1,4 @@
-// src/components/menu/menu-section.tsx
-import { MenuCategory } from "@/data/mock-places";
+import type { MenuCategory } from "@/app/modules/places/types/place.types";
 import { MenuItemCard } from "./menu-item";
 
 export const MenuSection = ({ category }: { category: MenuCategory }) => {

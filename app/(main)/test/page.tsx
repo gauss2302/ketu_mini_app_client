@@ -14,9 +14,9 @@ async function sendToBackend(initData: string | null) {
 		return;
 	}
 
-	const backendUrl = "http://localhost:8080/auth/telegram/manual";
+	const baseUrl = process.env.NEXT_PUBLIC_API_URL || "/api";
+	const backendUrl = `${baseUrl}/auth/telegram`;
 	console.log("Sending initData to backend at:", backendUrl);
-	console.log("Request body:", JSON.stringify({ initData }));
 
 	try {
 		const response = await fetch(backendUrl, {
@@ -25,7 +25,6 @@ async function sendToBackend(initData: string | null) {
 				Authorization: `tma ${initData}`,
 				"Content-Type": "application/json",
 			},
-			body: JSON.stringify({ initData }),
 		});
 
 		console.log("Backend response status:", response.status);

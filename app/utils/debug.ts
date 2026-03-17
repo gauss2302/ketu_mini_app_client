@@ -176,7 +176,7 @@ function getAuthErrorHints(stage: string, error: string): string[] {
   if (error.includes("401") || error.includes("Unauthorized")) {
     hints.push("Check that BOT_TOKEN in server matches the bot that owns this Mini App");
     hints.push("Verify initData is being sent correctly in Authorization header");
-    hints.push("Check that initData hasn't expired (default: 3 hours)");
+    hints.push("Check that initData hasn't expired (backend default: 300 seconds)");
   }
 
   if (error.includes("400") || error.includes("Bad Request")) {

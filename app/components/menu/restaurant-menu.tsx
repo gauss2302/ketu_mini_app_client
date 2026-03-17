@@ -1,6 +1,7 @@
-// src/components/menu/restaurant-menu.tsx
-import { useState } from "react";
-import { MenuCategory } from "@/data/mock-places";
+"use client";
+
+import { useEffect, useState } from "react";
+import type { MenuCategory } from "@/app/modules/places/types/place.types";
 import { MenuSection } from "./menu-section";
 
 interface RestaurantMenuProps {
@@ -10,10 +11,27 @@ interface RestaurantMenuProps {
 export const RestaurantMenu = ({ categories }: RestaurantMenuProps) => {
   const [activeCategory, setActiveCategory] = useState(categories[0]?.id);
 
+  useEffect(() => {
+    setActiveCategory(categories[0]?.id);
+  }, [categories]);
+
+  if (categories.length === 0) {
+    return (
+      <div className="theme-card -mx-4 rounded-[28px] px-4 py-6 text-sm theme-muted">
+        Menu is not available for this place yet.
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-gray-50 -mx-4">
-      {/* Category Navigation */}
-      <div className="sticky top-0 bg-white border-b z-10">
+    <div className="-mx-4">
+      <div
+        className="sticky top-0 z-10 border-b theme-divider backdrop-blur-xl"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,0.02), transparent), var(--app-surface-elevated)",
+        }}
+      >
         <div className="overflow-x-auto">
           <div className="flex px-4 py-3 space-x-4">
             {categories.map((category) => (
@@ -28,7 +46,7 @@ export const RestaurantMenu = ({ categories }: RestaurantMenuProps) => {
                 className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   activeCategory === category.id
                     ? "bg-[#FF7352] text-white"
-                    : "bg-gray-100 text-gray-600"
+                    : "theme-chip"
                 }`}
               >
                 {category.name}
@@ -38,7 +56,6 @@ export const RestaurantMenu = ({ categories }: RestaurantMenuProps) => {
         </div>
       </div>
 
-      {/* Menu Sections */}
       <div className="pt-4">
         {categories.map((category) => (
           <div key={category.id} id={category.id}>

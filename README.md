@@ -1,37 +1,95 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ketu Telegram Mini App (Frontend)
 
-## Getting Started
+Next.js frontend for Ketu Telegram Mini App.
 
-First, run the development server:
+## Stack
+
+- Next.js (App Router)
+- React + TypeScript
+- Tailwind CSS
+- `@telegram-apps/sdk-react`
+
+## Environment
+
+Create `.env.local`:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+NEXT_PUBLIC_API_URL=https://your-backend-domain.com
+NEXT_PUBLIC_USE_MOCK_API=false
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Important:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `NEXT_PUBLIC_API_URL` must point to a public backend URL reachable from Telegram WebView.
+- `localhost` does not work for real Telegram users (their device cannot access your local machine).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Run
 
-## Learn More
+```bash
+npm install
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Build:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run build
+npm run start
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Frontend Architecture
 
-## Deploy on Vercel
+The app is split into modules:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `app/modules/auth/*`:
+  - Telegram `initData` normalization
+  - call to `POST /auth/telegram`
+  - access/refresh token storage and rotation
+- `app/modules/user/*`:
+  - `GET /user/profile`
+  - `PUT /user/settings`
+- `app/modules/places/*`:
+  - `GET /places` with category/search filters
+  - `GET /places/:id` for full place details
+  - receives optimized preview image URLs for list and full image URLs for detail
+- `app/components/providers/*`:
+  - Telegram SDK bootstrap
+  - app context with authenticated user and tokens
+- `app/shared` is represented by cross-cutting utilities in `app/utils/*` and shared types in `app/types/*`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# ketu_mini_app_client
+Current auth-related structure:
+
+```text
+app/
+  modules/
+    auth/
+      services/auth-client.service.ts
+      types/auth.types.ts
+      utils/init-data.util.ts
+    user/
+      services/user-client.service.ts
+      types/user.types.ts
+    places/
+      services/places-client.service.ts
+      types/place.types.ts
+  components/providers/
+    telegram-bootstrap.tsx
+    telegram-context.tsx
+    telegram-provider.tsx
+  types/telegram.ts
+  utils/debug.ts
+```
+
+## Auth Flow
+
+1. `telegram-bootstrap` resolves `initDataRaw` from Telegram WebApp / SDK.
+2. `authClient.validateAuth()` sends `Authorization: tma <initDataRaw>` to backend.
+3. Backend validates `initData`, issues `accessToken + refreshToken`.
+4. Frontend stores tokens in `localStorage` and keeps access token in memory.
+5. Protected user requests go through `userClient` and auto-refresh on `401`.
+
+## Places Flow
+
+1. Home/saved screens request `GET /places` and render `previewImageUrl`.
+2. Place detail screen requests `GET /places/:id` and uses `fullImageUrl` for high-quality images.
+3. Image URLs are served by backend proxy endpoints that read objects from MinIO.

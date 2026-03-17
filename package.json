@@ -9,7 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@telegram-apps/sdk-react": "^3.3.6",
+    "@telegram-apps/sdk": "^3.11.8",
+    "@telegram-apps/sdk-react": "^3.3.9",
     "@tma.js/init-data-node": "^2.0.6",
     "jose": "^6.1.2",
     "lucide-react": "^0.471.0",

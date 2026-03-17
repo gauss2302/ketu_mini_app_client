@@ -1,5 +1,5 @@
 /**
- * Re-export official types from @telegram-apps/sdk-react
+ * Re-export official types from @telegram-apps/sdk-react.
  * These types are the source of truth for Telegram Mini App development
  */
 

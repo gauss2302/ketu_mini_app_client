@@ -46,7 +46,12 @@ export function DebugPanel() {
     return (
       <button
         onClick={handleOpen}
-        className="fixed bottom-20 right-4 z-50 bg-gray-800 text-white text-xs px-3 py-1.5 rounded-full shadow-lg opacity-50 hover:opacity-100 transition-opacity"
+        className="fixed bottom-20 right-4 z-50 text-xs px-3 py-1.5 rounded-full shadow-lg opacity-50 hover:opacity-100 transition-opacity"
+        style={{
+          backgroundColor: "var(--app-surface-elevated)",
+          color: "var(--app-text)",
+          border: "1px solid var(--app-border)",
+        }}
       >
         Debug
       </button>
@@ -55,13 +60,23 @@ export function DebugPanel() {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-end justify-center sm:items-center">
-      <div className="bg-white w-full max-w-lg max-h-[80vh] rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden flex flex-col">
+      <div
+        className="w-full max-w-lg max-h-[80vh] rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden flex flex-col"
+        style={{
+          backgroundColor: "var(--app-surface-elevated)",
+          color: "var(--app-text)",
+          border: "1px solid var(--app-border)",
+        }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
-          <h2 className="font-semibold text-gray-900">Debug Panel</h2>
+        <div
+          className="flex items-center justify-between px-4 py-3 border-b"
+          style={{ backgroundColor: "var(--app-surface)", borderColor: "var(--app-border)" }}
+        >
+          <h2 className="font-semibold">Debug Panel</h2>
           <button
             onClick={() => setIsOpen(false)}
-            className="text-gray-500 hover:text-gray-700"
+            className="theme-muted hover:opacity-80"
           >
             ✕
           </button>
@@ -71,8 +86,8 @@ export function DebugPanel() {
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {/* Auth Status */}
           <section>
-            <h3 className="font-medium text-gray-700 mb-2">Authentication Status</h3>
-            <div className="bg-gray-50 rounded-lg p-3 space-y-2 text-sm">
+            <h3 className="font-medium mb-2">Authentication Status</h3>
+            <div className="theme-panel rounded-lg p-3 space-y-2 text-sm">
               <StatusRow
                 label="Ready"
                 value={isReady ? "Yes" : "No"}
@@ -105,8 +120,8 @@ export function DebugPanel() {
 
           {/* InitData Validation */}
           <section>
-            <h3 className="font-medium text-gray-700 mb-2">InitData Validation</h3>
-            <div className="bg-gray-50 rounded-lg p-3 space-y-2 text-sm">
+            <h3 className="font-medium mb-2">InitData Validation</h3>
+            <div className="theme-panel rounded-lg p-3 space-y-2 text-sm">
               <StatusRow
                 label="Valid"
                 value={validation.valid ? "Yes" : `No - ${validation.reason}`}
@@ -143,30 +158,30 @@ export function DebugPanel() {
           {/* User Info */}
           {user && (
             <section>
-              <h3 className="font-medium text-gray-700 mb-2">User Info</h3>
-              <div className="bg-gray-50 rounded-lg p-3 space-y-1 text-sm">
+              <h3 className="font-medium mb-2">User Info</h3>
+              <div className="theme-panel rounded-lg p-3 space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">ID:</span>
+                  <span className="theme-muted">ID:</span>
                   <span className="font-mono">{user.id}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Name:</span>
+                  <span className="theme-muted">Name:</span>
                   <span>{user.firstName} {user.lastName}</span>
                 </div>
                 {user.username && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Username:</span>
+                    <span className="theme-muted">Username:</span>
                     <span>@{user.username}</span>
                   </div>
                 )}
                 {user.languageCode && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Language:</span>
+                    <span className="theme-muted">Language:</span>
                     <span>{user.languageCode}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Premium:</span>
+                  <span className="theme-muted">Premium:</span>
                   <span>{user.isPremium ? "Yes" : "No"}</span>
                 </div>
               </div>
@@ -176,7 +191,7 @@ export function DebugPanel() {
           {/* Debug Logs */}
           <section>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="font-medium text-gray-700">Debug Logs ({logs.length})</h3>
+              <h3 className="font-medium">Debug Logs ({logs.length})</h3>
               <div className="space-x-2">
                 <button
                   onClick={() => setLogs(getDebugLogs())}
@@ -226,7 +241,7 @@ export function DebugPanel() {
           {/* Hints */}
           {error && (
             <section>
-              <h3 className="font-medium text-gray-700 mb-2">Troubleshooting Hints</h3>
+              <h3 className="font-medium mb-2">Troubleshooting Hints</h3>
               <ul className="bg-yellow-50 rounded-lg p-3 text-sm text-yellow-800 space-y-1 list-disc list-inside">
                 <li>Make sure the app is opened from Telegram</li>
                 <li>Check that NEXT_PUBLIC_API_URL is set correctly</li>
@@ -259,7 +274,7 @@ function StatusRow({
 
   return (
     <div className="flex justify-between items-start">
-      <span className="text-gray-600">{label}:</span>
+      <span className="theme-muted">{label}:</span>
       <span className={`${statusColors[status]} text-right max-w-[60%] break-words`}>
         {value}
       </span>

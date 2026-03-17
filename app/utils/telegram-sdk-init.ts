@@ -1,9 +1,7 @@
 "use client";
 
 /**
- * Telegram SDK initialization per @telegram-apps/sdk-react and production practices.
- * @see https://habr.com/ru/companies/doubletapp/articles/917286/
- * @see https://docs.telegram-mini-apps.com/packages/telegram-apps-sdk
+ * Telegram SDK initialization per @telegram-apps/sdk-react.
  */
 import {
   init,
@@ -14,38 +12,59 @@ import {
   restoreInitData,
 } from "@telegram-apps/sdk-react";
 
+let sdkInitPromise: Promise<void> | null = null;
+
 /** Run once when running inside Telegram Web App. Idempotent. */
 export async function initTelegramSDK(): Promise<void> {
   if (typeof window === "undefined") return;
 
-  init();
-
-  if (!backButton.isSupported() || !miniApp.isSupported()) {
-    throw new Error("ERR_NOT_SUPPORTED: backButton or miniApp not supported");
+  if (sdkInitPromise) {
+    return sdkInitPromise;
   }
 
-  if (backButton.mount.isAvailable() && !backButton.isMounted()) {
-    backButton.mount();
-  }
-  if (miniApp.mountSync.isAvailable() && !miniApp.isMounted()) {
-    miniApp.mountSync();
-  }
-  if (themeParams.mountSync.isAvailable() && !themeParams.isMounted()) {
-    themeParams.mountSync();
-  }
+  sdkInitPromise = (async () => {
+    init();
 
-  restoreInitData();
+    if (!backButton.isSupported() || !miniApp.isSupported()) {
+      throw new Error("ERR_NOT_SUPPORTED: backButton or miniApp not supported");
+    }
 
-  if (viewport.mount.isAvailable() && !viewport.isMounted()) {
-    await viewport.mount();
-  }
-  if (viewport.bindCssVars.isAvailable()) {
-    viewport.bindCssVars();
-  }
-  if (miniApp.bindCssVars.isAvailable()) {
-    miniApp.bindCssVars();
-  }
-  if (themeParams.bindCssVars.isAvailable()) {
-    themeParams.bindCssVars();
-  }
+    if (backButton.mount.isAvailable() && !backButton.isMounted()) {
+      backButton.mount();
+    }
+    if (miniApp.mountSync.isAvailable() && !miniApp.isMounted() && !miniApp.isMounting()) {
+      miniApp.mountSync();
+    }
+    if (themeParams.mountSync.isAvailable() && !themeParams.isMounted() && !themeParams.isMounting()) {
+      themeParams.mountSync();
+    }
+
+    restoreInitData();
+
+    if (viewport.mount.isAvailable() && !viewport.isMounted()) {
+      if (viewport.isMounting()) {
+        const mounting = viewport.mountPromise();
+        if (mounting) {
+          await mounting;
+        }
+      } else {
+        await viewport.mount();
+      }
+    }
+
+    if (viewport.bindCssVars.isAvailable() && !viewport.isCssVarsBound()) {
+      viewport.bindCssVars();
+    }
+    if (miniApp.bindCssVars.isAvailable() && !miniApp.isCssVarsBound()) {
+      miniApp.bindCssVars();
+    }
+    if (themeParams.bindCssVars.isAvailable() && !themeParams.isCssVarsBound()) {
+      themeParams.bindCssVars();
+    }
+  })().catch((error) => {
+    sdkInitPromise = null;
+    throw error;
+  });
+
+  await sdkInitPromise;
 }
